@@ -2,6 +2,23 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendConfirmationToGuest } from '@/lib/mail'; // Beimportáljuk a másik függvényedet
 
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = parseInt(params.id);
+    await prisma.booking.delete({
+      where: { id },
+    });
+    return NextResponse.json({ message: 'Foglalás törölve' });
+  } catch (error) {
+    console.error('DELETE Error:', error);
+    return NextResponse.json({ error: 'Hiba a törléskor' }, { status: 500 });
+  }
+}
+
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
