@@ -183,11 +183,17 @@ export default function InfoPage() {
                 </Link>
               </div>
             </div>
-            <div className="h-[300px] md:h-[400px] lg:h-auto w-full">
+           <div className="h-[400px] lg:h-auto min-h-[400px] w-full relative">
                <iframe 
-                width="100%" height="100%" frameBorder="0" 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2729.866530663673!2d17.38241477717462!3d46.79708707111326!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x476903f6f9661191%3A0x632598380e227094!2zQmFsYXRvbmVkZXJpY3MsIFNpcG9zdG9yb2sgdS4gMywgODMxMg!5e0!3m2!1shu!2shu!4v1708450000000!5m2!1shu!2shu"
-                className="grayscale-[20%] hover:grayscale-0 transition-all"
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                src="https://maps.google.com/maps?q=Balaton+Hegyvid%C3%A9ki+Apartman,+8312+Balatonederics,+Sipostorok+utca+3&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                style={{ border: 0 }} 
+                allowFullScreen={true} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                className="grayscale-[20%] hover:grayscale-0 transition-all duration-700"
               ></iframe>
             </div>
           </div>
