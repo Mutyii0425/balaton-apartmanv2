@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateRange } from 'react-day-picker';
-import { format, eachDayOfInterval, differenceInCalendarDays, isWithinInterval } from 'date-fns';
+import { format, eachDayOfInterval, differenceInCalendarDays, isWithinInterval, addMonths, subMonths } from 'date-fns';
 import { hu, de, enUS } from 'date-fns/locale'; 
-import { Loader2, CheckCircle, Calculator, Dog, Wind, CalendarDays, Users, Banknote, CreditCard } from 'lucide-react';
+import { Loader2, CheckCircle, Calculator, Dog, Wind, CalendarDays, Users, Banknote, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PRICES = {
   ADULT_1: 12000,
@@ -40,7 +40,7 @@ export default function BookingPage() {
   const { t, language } = useLanguage(); 
 
   const [date, setDate] = useState<DateRange | undefined>();
-  const [month, setMonth] = useState<Date>(new Date()); // ÚJ: A naptár aktuális nézetének kezelése
+  const [month, setMonth] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
@@ -56,6 +56,10 @@ export default function BookingPage() {
 
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [nights, setNights] = useState<number>(0);
+
+  // --- NAPTÁR NAVIGÁCIÓ JAVÍTÁSA ---
+  const nextMonth = () => setMonth(addMonths(month, 1));
+  const prevMonth = () => setMonth(subMonths(month, 1));
 
   useEffect(() => {
     async function fetchBookings() {
@@ -296,45 +300,69 @@ export default function BookingPage() {
                 </div>
               )}
 
-              {/* JAVÍTOTT: month és onMonthChange hozzáadva, overflow-x-auto a görgethetőségért */}
-              <div className="flex justify-center mb-8 w-full overflow-x-auto pb-4">
-                <Calendar
-                  mode="range"
-                  selected={date}
-                  onSelect={setDate}
-                  month={month}
-                  onMonthChange={setMonth}
-                  locale={localeMap[language as keyof typeof localeMap]} 
-                  numberOfMonths={2}
-                  className="rounded-xl border border-gray-100 p-4 shadow-sm relative bg-white"
-                  disabled={[{ before: new Date() }, ...bookedDates]}
-                  modifiers={{ booked: bookedDates, pending: pendingDates }}
-                  modifiersClassNames={{
-                    booked: "bg-red-50 text-red-300 line-through decoration-red-300 opacity-60 cursor-not-allowed",
-                    pending: "bg-orange-100 text-orange-600 font-bold"
-                  }}
-                  classNames={{
-                    months: "flex flex-col md:flex-row space-y-4 md:space-x-8 md:space-y-0 justify-center",
-                    month: "space-y-4", 
-                    caption: "flex justify-center pt-1 relative items-center mb-4",
-                    caption_label: "text-lg font-bold text-slate-800",
-                    nav: "space-x-1 flex items-center absolute top-3 w-full justify-between px-2 left-0 pointer-events-none",
-                    nav_button: "h-8 w-8 bg-white border border-gray-100 p-0 hover:bg-slate-50 rounded-full transition-colors shadow-sm pointer-events-auto",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex",
-                    head_cell: "text-slate-400 rounded-md w-10 font-normal text-[0.8rem] flex justify-center items-center h-10",
-                    row: "flex w-full mt-2",
-                    cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-blue-50/50 [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                    day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors flex items-center justify-center",
-                    day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-700 focus:text-white shadow-md",
-                    day_today: "bg-slate-100 text-slate-900 font-bold ring-1 ring-slate-300",
-                    day_outside: "text-slate-300 opacity-50",
-                    day_disabled: "text-slate-300 opacity-50",
-                    day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-blue-900",
-                    day_hidden: "invisible",
-                  }}
-                />
+              <div className="relative group">
+                {/* SAJÁT NAVIGÁCIÓS GOMBOK */}
+                <div className="absolute top-5 left-0 right-0 flex justify-between px-4 z-50 pointer-events-none">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
+                    onClick={prevMonth}
+                  >
+                    <ChevronLeft className="h-5 w-5 text-slate-600" />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
+                    onClick={nextMonth}
+                  >
+                    <ChevronRight className="h-5 w-5 text-slate-600" />
+                  </Button>
+                </div>
+
+                <div className="flex justify-center mb-8 w-full overflow-x-auto pb-4">
+                  <Calendar
+                    key={month.toISOString()} // Ez kényszeríti az újrarajzolást lapozáskor
+                    mode="range"
+                    selected={date}
+                    onSelect={setDate}
+                    month={month}
+                    onMonthChange={setMonth}
+                    locale={localeMap[language as keyof typeof localeMap]} 
+                    numberOfMonths={2}
+                    className="rounded-xl border border-gray-100 p-4 shadow-sm relative bg-white"
+                    disabled={[{ before: new Date() }, ...bookedDates]}
+                    modifiers={{ booked: bookedDates, pending: pendingDates }}
+                    modifiersClassNames={{
+                      booked: "bg-red-50 text-red-300 line-through decoration-red-300 opacity-60 cursor-not-allowed",
+                      pending: "bg-orange-100 text-orange-600 font-bold"
+                    }}
+                    classNames={{
+                      months: "flex flex-col md:flex-row space-y-4 md:space-x-8 md:space-y-0 justify-center",
+                      month: "space-y-4", 
+                      caption: "flex justify-center pt-1 relative items-center mb-4",
+                      caption_label: "text-lg font-bold text-slate-800",
+                      nav: "hidden", // Elrejtjük a hibás belső nyilakat
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex",
+                      head_cell: "text-slate-400 rounded-md w-10 font-normal text-[0.8rem] flex justify-center items-center h-10",
+                      row: "flex w-full mt-2",
+                      cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-blue-50/50 [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                      day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors flex items-center justify-center",
+                      day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-700 focus:text-white shadow-md",
+                      day_today: "bg-slate-100 text-slate-900 font-bold ring-1 ring-slate-300",
+                      day_outside: "text-slate-300 opacity-50",
+                      day_disabled: "text-slate-300 opacity-50",
+                      day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-blue-900",
+                      day_hidden: "invisible",
+                    }}
+                  />
+                </div>
               </div>
+
               <div className="bg-slate-50 rounded-2xl p-4 md:p-6 text-center border border-slate-100">
                  <p className="text-lg md:text-xl text-slate-700 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
                     {date?.from ? (
@@ -396,14 +424,14 @@ export default function BookingPage() {
                   <div className="flex flex-col gap-3 pt-5 border-t border-slate-200">
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform"><Dog size={18} /></div>
+                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Dog size={18} /></div>
                            <span className="font-semibold text-slate-700">{t.booking.dog}</span>
                         </div>
                         <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
                       </label>
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400 group-hover:scale-110 transition-transform"><Wind size={18} /></div>
+                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400"><Wind size={18} /></div>
                            <span className="font-semibold text-slate-700">Klíma használat (+2000Ft/éj)</span>
                         </div>
                         <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
