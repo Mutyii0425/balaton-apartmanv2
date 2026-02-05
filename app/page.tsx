@@ -40,6 +40,7 @@ export default function BookingPage() {
   const { t, language } = useLanguage(); 
 
   const [date, setDate] = useState<DateRange | undefined>();
+  const [month, setMonth] = useState<Date>(new Date()); // ÚJ: A naptár aktuális nézetének kezelése
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
@@ -148,7 +149,6 @@ export default function BookingPage() {
 
     const nightCount = differenceInCalendarDays(date.to, date.from);
 
-    // --- JÚLIUS 1 - AUGUSZTUS 31 (MINIMUM 4 ÉJ) SZABÁLY ---
     const startOfSummer = new Date(new Date().getFullYear(), 6, 1); 
     const endOfSummer = new Date(new Date().getFullYear(), 7, 31); 
 
@@ -172,7 +172,7 @@ export default function BookingPage() {
       adults: adults,
       children: children,
       hasDog: hasDog,
-      needsHeating: needsClimate, // Háttérben marad a needsHeating név az adatbázis miatt
+      needsHeating: needsClimate, 
       paymentMethod: paymentMethod,
       totalPrice: totalPrice,
       startDate: date.from,
@@ -280,7 +280,6 @@ export default function BookingPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 md:p-8">
-              {/* --- FŐSZEZONI FIGYELMEZTETÉS A NAPTÁR FÖLÉ --- */}
               {date?.from && isWithinInterval(date.from, { 
                 start: new Date(new Date().getFullYear(), 6, 1), 
                 end: new Date(new Date().getFullYear(), 7, 31) 
@@ -297,14 +296,17 @@ export default function BookingPage() {
                 </div>
               )}
 
-              <div className="flex justify-center mb-8 overflow-hidden w-full">
+              {/* JAVÍTOTT: month és onMonthChange hozzáadva, overflow-x-auto a görgethetőségért */}
+              <div className="flex justify-center mb-8 w-full overflow-x-auto pb-4">
                 <Calendar
                   mode="range"
                   selected={date}
                   onSelect={setDate}
-                  locale={localeMap[language]} 
+                  month={month}
+                  onMonthChange={setMonth}
+                  locale={localeMap[language as keyof typeof localeMap]} 
                   numberOfMonths={2}
-                  className="rounded-xl border border-gray-100 p-4 w-fit mx-auto shadow-sm relative"
+                  className="rounded-xl border border-gray-100 p-4 shadow-sm relative bg-white"
                   disabled={[{ before: new Date() }, ...bookedDates]}
                   modifiers={{ booked: bookedDates, pending: pendingDates }}
                   modifiersClassNames={{
@@ -312,14 +314,12 @@ export default function BookingPage() {
                     pending: "bg-orange-100 text-orange-600 font-bold"
                   }}
                   classNames={{
-                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0 justify-center",
+                    months: "flex flex-col md:flex-row space-y-4 md:space-x-8 md:space-y-0 justify-center",
                     month: "space-y-4", 
                     caption: "flex justify-center pt-1 relative items-center mb-4",
                     caption_label: "text-lg font-bold text-slate-800",
                     nav: "space-x-1 flex items-center absolute top-3 w-full justify-between px-2 left-0 pointer-events-none",
                     nav_button: "h-8 w-8 bg-white border border-gray-100 p-0 hover:bg-slate-50 rounded-full transition-colors shadow-sm pointer-events-auto",
-                    nav_button_previous: "",
-                    nav_button_next: "",
                     table: "w-full border-collapse space-y-1",
                     head_row: "flex",
                     head_cell: "text-slate-400 rounded-md w-10 font-normal text-[0.8rem] flex justify-center items-center h-10",
@@ -396,14 +396,14 @@ export default function BookingPage() {
                   <div className="flex flex-col gap-3 pt-5 border-t border-slate-200">
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Dog size={18} /></div>
+                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform"><Dog size={18} /></div>
                            <span className="font-semibold text-slate-700">{t.booking.dog}</span>
                         </div>
                         <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
                       </label>
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400"><Wind size={18} /></div>
+                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400 group-hover:scale-110 transition-transform"><Wind size={18} /></div>
                            <span className="font-semibold text-slate-700">Klíma használat (+2000Ft/éj)</span>
                         </div>
                         <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
