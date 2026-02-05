@@ -139,30 +139,31 @@ export default function BookingPage() {
   }, [adults, children, hasDog, needsClimate, date, occupancyMap]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    
-    if (!date?.from || !date?.to) {
-      alert(t.booking.select_dates); 
-      return;
-    }
+  e.preventDefault();
+  
+  if (!date?.from || !date?.to) {
+    alert(t.booking.select_dates); 
+    return;
+  }
 
-    const nightCount = differenceInCalendarDays(date.to, date.from);
+  const nightCount = differenceInCalendarDays(date.to, date.from);
 
-    // --- ÚJ KORLÁTOZÁS: JÚNIUS 1 - AUGUSZTUS 31 ---
-    const startOfSummer = new Date(new Date().getFullYear(), 5, 1); // Június 1.
-    const endOfSummer = new Date(new Date().getFullYear(), 7, 31); // Augusztus 31.
+  // --- MÓDOSÍTOTT KORLÁTOZÁS: JÚLIUS 1 - AUGUSZTUS 31 (MINIMUM 4 ÉJ) ---
+  const startOfSummer = new Date(new Date().getFullYear(), 6, 1); // Július 1. (6-os index)
+  const endOfSummer = new Date(new Date().getFullYear(), 7, 31);  // Augusztus 31. (7-es index)
 
-    const isSummerBooking = isWithinInterval(date.from, { start: startOfSummer, end: endOfSummer }) || 
-                            isWithinInterval(date.to, { start: startOfSummer, end: endOfSummer });
+  // Megnézzük, hogy a foglalás érinti-e a főszezont
+  const isSummerBooking = isWithinInterval(date.from, { start: startOfSummer, end: endOfSummer }) || 
+                          isWithinInterval(date.to, { start: startOfSummer, end: endOfSummer });
 
-    if (isSummerBooking && nightCount > 4) {
-      alert(language === 'hu' 
-        ? "Június 1. és augusztus 31. között maximum 4 éjszaka foglalható!" 
-        : "Maximum 4 nights can be booked between June 1 and August 31!");
-      return;
-    }
+  if (isSummerBooking && nightCount < 4) {
+    alert(language === 'hu' 
+      ? "A július 1. és augusztus 31. közötti időszakban minimum 4 éjszaka foglalható!" 
+      : "A minimum of 4 nights is required for bookings between July 1 and August 31!");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -281,6 +282,22 @@ export default function BookingPage() {
             </CardHeader>
             <CardContent className="p-4 md:p-8">
               <div className="flex justify-center mb-8 overflow-hidden w-full">
+
+                {date?.from && isWithinInterval(date.from, { 
+  start: new Date(new Date().getFullYear(), 6, 1), 
+  end: new Date(new Date().getFullYear(), 7, 31) 
+}) && (
+  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+    <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
+      <CalendarDays size={20} />
+    </div>
+    <p className="text-sm font-medium text-amber-800">
+      {language === 'hu' 
+        ? "Főszezoni időszak (július-augusztus): Ebben az időszakban minimum 4 éjszaka foglalható." 
+        : "High season (July-August): A minimum of 4 nights is required during this period."}
+    </p>
+  </div>
+)}
                 <Calendar
                   mode="range"
                   selected={date}
