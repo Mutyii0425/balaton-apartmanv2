@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateRange } from 'react-day-picker';
-import { format, eachDayOfInterval, differenceInCalendarDays } from 'date-fns';
+import { format, eachDayOfInterval, differenceInCalendarDays, isWithinInterval } from 'date-fns';
 import { hu, de, enUS } from 'date-fns/locale'; 
-import { Loader2, CheckCircle, Calculator, Dog, Flame, CalendarDays, Users, Banknote, CreditCard } from 'lucide-react';
+import { Loader2, CheckCircle, Calculator, Dog, Wind, CalendarDays, Users, Banknote, CreditCard } from 'lucide-react';
 
 const PRICES = {
   ADULT_1: 12000,
@@ -18,7 +18,7 @@ const PRICES = {
   ADULT_3: 27500,
   CHILD: 6000,
   DOG: 2500,
-  HEATING: 2000
+  CLIMATE: 2000 // Fűtés helyett Klíma néven
 };
 
 const localeMap = {
@@ -46,7 +46,7 @@ export default function BookingPage() {
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
   const [hasDog, setHasDog] = useState<boolean>(false);
-  const [needsHeating, setNeedsHeating] = useState<boolean>(false);
+  const [needsClimate, setNeedsClimate] = useState<boolean>(false); // heating -> climate
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
 
   const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
@@ -122,11 +122,10 @@ export default function BookingPage() {
 
       const childPricePerNight = children * PRICES.CHILD;
       const dogPricePerNight = hasDog ? PRICES.DOG : 0;
-      const heatingPricePerNight = needsHeating ? (aptsNeeded * PRICES.HEATING) : 0;
+      const climatePricePerNight = needsClimate ? (aptsNeeded * PRICES.CLIMATE) : 0;
 
-      let nightlyTotal = adultPricePerNight + childPricePerNight + dogPricePerNight + heatingPricePerNight;
+      let nightlyTotal = adultPricePerNight + childPricePerNight + dogPricePerNight + climatePricePerNight;
 
-      // 20% FELÁR 1 ÉJSZAKA ESETÉN
       if (nightCount === 1) {
         nightlyTotal = Math.round(nightlyTotal * 1.2);
       }
@@ -137,10 +136,32 @@ export default function BookingPage() {
       setNights(0);
     }
 
-  }, [adults, children, hasDog, needsHeating, date, occupancyMap]);
+  }, [adults, children, hasDog, needsClimate, date, occupancyMap]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    
+    if (!date?.from || !date?.to) {
+      alert(t.booking.select_dates); 
+      return;
+    }
+
+    const nightCount = differenceInCalendarDays(date.to, date.from);
+
+    // --- ÚJ KORLÁTOZÁS: JÚNIUS 1 - AUGUSZTUS 31 ---
+    const startOfSummer = new Date(new Date().getFullYear(), 5, 1); // Június 1.
+    const endOfSummer = new Date(new Date().getFullYear(), 7, 31); // Augusztus 31.
+
+    const isSummerBooking = isWithinInterval(date.from, { start: startOfSummer, end: endOfSummer }) || 
+                            isWithinInterval(date.to, { start: startOfSummer, end: endOfSummer });
+
+    if (isSummerBooking && nightCount > 4) {
+      alert(language === 'hu' 
+        ? "Június 1. és augusztus 31. között maximum 4 éjszaka foglalható!" 
+        : "Maximum 4 nights can be booked between June 1 and August 31!");
+      return;
+    }
+
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -151,21 +172,15 @@ export default function BookingPage() {
       adults: adults,
       children: children,
       hasDog: hasDog,
-      needsHeating: needsHeating,
+      needsHeating: needsClimate,
       paymentMethod: paymentMethod,
       totalPrice: totalPrice,
-      startDate: date?.from,
-      endDate: date?.to,
+      startDate: date.from,
+      endDate: date.to,
     };
 
-    if (!data.startDate || !data.endDate) {
-      alert(t.booking.select_dates); 
-      setLoading(false);
-      return;
-    }
-
     const isConflict = bookedDates.some(bookedDay => 
-      (date?.from && date?.to && bookedDay >= date.from && bookedDay <= date.to)
+      (date.from && date.to && bookedDay >= date.from && bookedDay <= date.to)
     );
 
     if (isConflict) {
@@ -211,8 +226,13 @@ export default function BookingPage() {
               <li className="flex justify-between"><span>Vendégek:</span> <span className="font-medium">{adults} {t.booking.adults}, {children} {t.booking.children}</span></li>
               {nights === 1 && <li className="flex justify-between text-amber-600 font-bold"><span>Extra:</span> <span>+20% (1 éjszakás felár)</span></li>}
               {hasDog && <li className="flex justify-between text-blue-600"><span>Extra:</span> <span className="font-medium">🐶 {t.booking.dog}</span></li>}
-              {needsHeating && <li className="flex justify-between text-orange-600"><span>Extra:</span> <span className="font-medium">🔥 {t.booking.heating}</span></li>}
+              {needsClimate && <li className="flex justify-between text-blue-400"><span>Extra:</span> <span className="font-medium">❄️ Klíma</span></li>}
               
+              <li className="flex justify-between text-slate-500 italic">
+                <span>Idegenforgalmi adó (helyszínen):</span>
+                <span>{(adults * nights * 500).toLocaleString('hu-HU')} Ft</span>
+              </li>
+
               <li className="flex justify-between border-t pt-2 mt-2">
                 <span>Fizetési mód:</span>
                 <span className="font-medium capitalize text-slate-900">
@@ -221,10 +241,13 @@ export default function BookingPage() {
               </li>
 
               <li className="flex justify-between border-t pt-2 mt-2 text-lg font-bold text-blue-900">
-                <span>Végösszeg:</span>
+                <span>Szállásdíj:</span>
                 <span>{totalPrice.toLocaleString('hu-HU')} Ft</span>
               </li>
             </ul>
+            <p className="text-[10px] text-slate-400 mt-2 text-center">
+              * Az IFA (500 Ft/fő/éj) 18 év felett fizetendő.
+            </p>
           </div>
           
           <Button onClick={() => window.location.reload()} variant="outline" className="w-full h-12 rounded-xl border-2 border-green-600 text-green-700 hover:bg-green-50 font-bold">
@@ -341,7 +364,7 @@ export default function BookingPage() {
                         max={6} 
                         value={adults} 
                         onChange={(e) => setAdults(Number(e.target.value))}
-                        className="bg-white h-12 text-xl font-bold border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all rounded-xl text-center"
+                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
                       />
                     </div>
                     <div className="space-y-2">
@@ -352,25 +375,25 @@ export default function BookingPage() {
                         max={5} 
                         value={children} 
                         onChange={(e) => setChildren(Number(e.target.value))}
-                        className="bg-white h-12 text-xl font-bold border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all rounded-xl text-center"
+                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
                       />
                     </div>
                   </div>
                   
                   <div className="flex flex-col gap-3 pt-5 border-t border-slate-200">
-                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group">
+                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform"><Dog size={18} /></div>
+                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Dog size={18} /></div>
                            <span className="font-semibold text-slate-700">{t.booking.dog}</span>
                         </div>
                         <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
                       </label>
-                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all group">
+                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-orange-100 p-2 rounded-lg text-orange-600 group-hover:scale-110 transition-transform"><Flame size={18} /></div>
-                           <span className="font-semibold text-slate-700">{t.booking.heating}</span>
+                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400"><Wind size={18} /></div>
+                           <span className="font-semibold text-slate-700">Klíma használat</span>
                         </div>
-                        <input type="checkbox" checked={needsHeating} onChange={(e) => setNeedsHeating(e.target.checked)} className="w-5 h-5 accent-orange-500 rounded cursor-pointer" />
+                        <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
                       </label>
                   </div>
                 </div>
@@ -378,15 +401,15 @@ export default function BookingPage() {
                 <div className="space-y-4">
                     <div className="space-y-1">
                         <Label className="text-slate-500 font-medium pl-1">{t.booking.name}</Label>
-                        <Input name="name" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 rounded-xl transition-all" />
+                        <Input name="name" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
                     </div>
                     <div className="space-y-1">
                         <Label className="text-slate-500 font-medium pl-1">{t.booking.email}</Label>
-                        <Input name="email" type="email" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 rounded-xl transition-all" />
+                        <Input name="email" type="email" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
                     </div>
                     <div className="space-y-1">
                         <Label className="text-slate-500 font-medium pl-1">{t.booking.phone}</Label>
-                        <Input name="phone" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 rounded-xl transition-all" />
+                        <Input name="phone" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
                     </div>
                 </div>
 
@@ -395,50 +418,26 @@ export default function BookingPage() {
                      <Banknote size={20} className="text-green-600" /> Fizetési mód
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('cash')}
-                      className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'cash' ? 'bg-green-50 border-green-300 ring-1 ring-green-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                    >
+                    <button type="button" onClick={() => setPaymentMethod('cash')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'cash' ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${paymentMethod === 'cash' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          <Banknote size={20} />
-                        </div>
-                        <span className={`font-semibold ${paymentMethod === 'cash' ? 'text-green-800' : 'text-gray-700'}`}>Készpénz</span>
+                        <div className={`p-2 rounded-lg ${paymentMethod === 'cash' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}><Banknote size={20} /></div>
+                        <span className="font-semibold text-slate-700">Készpénz</span>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cash' ? 'border-green-600' : 'border-gray-300'}`}>
-                        {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-green-600" />}
-                      </div>
+                      {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-green-600" />}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('card')}
-                      className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'card' ? 'bg-blue-50 border-blue-300 ring-1 ring-blue-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                    >
+                    <button type="button" onClick={() => setPaymentMethod('card')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'card' ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${paymentMethod === 'card' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                          <CreditCard size={20} />
-                        </div>
-                        <span className={`font-semibold ${paymentMethod === 'card' ? 'text-blue-800' : 'text-gray-700'}`}>Bankkártya</span>
+                        <div className={`p-2 rounded-lg ${paymentMethod === 'card' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}><CreditCard size={20} /></div>
+                        <span className="font-semibold text-slate-700">Bankkártya</span>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'card' ? 'border-blue-600' : 'border-gray-300'}`}>
-                        {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
-                      </div>
+                      {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('szep_card')}
-                      className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'szep_card' ? 'bg-purple-50 border-purple-300 ring-1 ring-purple-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                    >
+                    <button type="button" onClick={() => setPaymentMethod('szep_card')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'szep_card' ? 'bg-purple-50 border-purple-300' : 'bg-white border-gray-200'}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${paymentMethod === 'szep_card' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}>
-                          <CreditCard size={20} />
-                        </div>
-                        <span className={`font-semibold ${paymentMethod === 'szep_card' ? 'text-purple-800' : 'text-gray-700'}`}>SZÉP Kártya</span>
+                        <div className={`p-2 rounded-lg ${paymentMethod === 'szep_card' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}><CreditCard size={20} /></div>
+                        <span className="font-semibold text-slate-700">SZÉP Kártya</span>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'szep_card' ? 'border-purple-600' : 'border-gray-300'}`}>
-                        {paymentMethod === 'szep_card' && <div className="w-2.5 h-2.5 rounded-full bg-purple-600" />}
-                      </div>
+                      {paymentMethod === 'szep_card' && <div className="w-2.5 h-2.5 rounded-full bg-purple-600" />}
                     </button>
                   </div>
                 </div>
@@ -453,8 +452,6 @@ export default function BookingPage() {
                       {totalPrice.toLocaleString('hu-HU')} <span className="text-lg text-yellow-600/80">Ft</span>
                     </div>
                   </div>
-                  
-                  {/* FIGYELMEZTETÉS 1 ÉJSZAKA ESETÉN */}
                   {nights === 1 && (
                     <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-amber-400 bg-amber-400/10 p-2 rounded-lg border border-amber-400/20 mt-1">
                       <Calculator size={14} />
@@ -463,7 +460,7 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full text-lg h-14 font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl hover:shadow-blue-200 hover:-translate-y-1 transition-all" disabled={loading}>
+                <Button type="submit" className="w-full text-lg h-14 font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all" disabled={loading}>
                   {loading ? <Loader2 className="animate-spin mr-2" /> : t.booking.send}
                 </Button>
               </form>
