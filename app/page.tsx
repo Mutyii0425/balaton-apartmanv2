@@ -57,7 +57,7 @@ export default function BookingPage() {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [nights, setNights] = useState<number>(0);
 
-  // --- FUNKCIÓ: Kiválasztja a szöveget fókuszkor, hogy gépeléskor eltűnjön az alapértelmezett szám ---
+  // --- FUNKCIÓK ---
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
   };
@@ -393,14 +393,19 @@ export default function BookingPage() {
             </CardHeader>
             <CardContent className="px-6 md:px-8 pb-8">
               <form onSubmit={handleSubmit} className="space-y-8">
-                {/* JAVÍTOTT RÉSZ: Vendégek beállítása elcsúszás mentesen */}
+                
+                {/* VENDÉGEK SZEKCIÓ JAVÍTVA */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-5">
                   <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
                      <Users size={20} className="text-blue-500" /> Vendégek
                   </div>
-                  <div className="flex flex-row gap-4">
+                  
+                  {/* items-end biztosítja, hogy az inputok alja egy vonalban legyen */}
+                  <div className="flex flex-row gap-4 items-end">
                     <div className="flex-1 space-y-2">
-                      <Label htmlFor="adults" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">{t.booking.adults}</Label>
+                      <Label htmlFor="adults" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block min-h-[35px]">
+                        {t.booking.adults}
+                      </Label>
                       <Input 
                         type="number" min={1} max={6} 
                         value={adults} 
@@ -410,7 +415,9 @@ export default function BookingPage() {
                       />
                     </div>
                     <div className="flex-1 space-y-2">
-                      <Label htmlFor="children" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">{t.booking.children}</Label>
+                      <Label htmlFor="children" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block min-h-[35px] leading-tight">
+                        {t.booking.children} <span className="lowercase font-normal opacity-70">(2-14 év)</span>
+                      </Label>
                       <Input 
                         type="number" min={0} max={5} 
                         value={children} 
