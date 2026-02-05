@@ -18,7 +18,7 @@ const PRICES = {
   ADULT_3: 27500,
   CHILD: 6000,
   DOG: 2500,
-  CLIMATE: 2000 // Fűtés helyett Klíma néven
+  CLIMATE: 2000 
 };
 
 const localeMap = {
@@ -46,7 +46,7 @@ export default function BookingPage() {
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
   const [hasDog, setHasDog] = useState<boolean>(false);
-  const [needsClimate, setNeedsClimate] = useState<boolean>(false); // heating -> climate
+  const [needsClimate, setNeedsClimate] = useState<boolean>(false); 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
 
   const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
@@ -139,31 +139,30 @@ export default function BookingPage() {
   }, [adults, children, hasDog, needsClimate, date, occupancyMap]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  
-  if (!date?.from || !date?.to) {
-    alert(t.booking.select_dates); 
-    return;
-  }
+    e.preventDefault();
+    
+    if (!date?.from || !date?.to) {
+      alert(t.booking.select_dates); 
+      return;
+    }
 
-  const nightCount = differenceInCalendarDays(date.to, date.from);
+    const nightCount = differenceInCalendarDays(date.to, date.from);
 
-  // --- MÓDOSÍTOTT KORLÁTOZÁS: JÚLIUS 1 - AUGUSZTUS 31 (MINIMUM 4 ÉJ) ---
-  const startOfSummer = new Date(new Date().getFullYear(), 6, 1); // Július 1. (6-os index)
-  const endOfSummer = new Date(new Date().getFullYear(), 7, 31);  // Augusztus 31. (7-es index)
+    // --- JÚLIUS 1 - AUGUSZTUS 31 (MINIMUM 4 ÉJ) SZABÁLY ---
+    const startOfSummer = new Date(new Date().getFullYear(), 6, 1); 
+    const endOfSummer = new Date(new Date().getFullYear(), 7, 31); 
 
-  // Megnézzük, hogy a foglalás érinti-e a főszezont
-  const isSummerBooking = isWithinInterval(date.from, { start: startOfSummer, end: endOfSummer }) || 
-                          isWithinInterval(date.to, { start: startOfSummer, end: endOfSummer });
+    const isSummerBooking = isWithinInterval(date.from, { start: startOfSummer, end: endOfSummer }) || 
+                            isWithinInterval(date.to, { start: startOfSummer, end: endOfSummer });
 
-  if (isSummerBooking && nightCount < 4) {
-    alert(language === 'hu' 
-      ? "A július 1. és augusztus 31. közötti időszakban minimum 4 éjszaka foglalható!" 
-      : "A minimum of 4 nights is required for bookings between July 1 and August 31!");
-    return;
-  }
+    if (isSummerBooking && nightCount < 4) {
+      alert(language === 'hu' 
+        ? "A július 1. és augusztus 31. közötti főszezonban minimum 4 éjszaka foglalható!" 
+        : "A minimum of 4 nights is required for bookings between July 1 and August 31!");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -173,7 +172,7 @@ export default function BookingPage() {
       adults: adults,
       children: children,
       hasDog: hasDog,
-      needsHeating: needsClimate,
+      needsHeating: needsClimate, // Háttérben marad a needsHeating név az adatbázis miatt
       paymentMethod: paymentMethod,
       totalPrice: totalPrice,
       startDate: date.from,
@@ -247,7 +246,7 @@ export default function BookingPage() {
               </li>
             </ul>
             <p className="text-[10px] text-slate-400 mt-2 text-center">
-              * Az IFA (500 Ft/fő/éj) 18 év felett fizetendő.
+              * Az IFA (500 Ft/fő/éj) 18 év felett fizetendő a helyszínen.
             </p>
           </div>
           
@@ -281,23 +280,24 @@ export default function BookingPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 md:p-8">
-              <div className="flex justify-center mb-8 overflow-hidden w-full">
+              {/* --- FŐSZEZONI FIGYELMEZTETÉS A NAPTÁR FÖLÉ --- */}
+              {date?.from && isWithinInterval(date.from, { 
+                start: new Date(new Date().getFullYear(), 6, 1), 
+                end: new Date(new Date().getFullYear(), 7, 31) 
+              }) && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
+                    <CalendarDays size={20} />
+                  </div>
+                  <p className="text-sm font-semibold text-amber-900 leading-tight">
+                    {language === 'hu' 
+                      ? "Főszezoni időszak (július-augusztus): Ebben az időszakban legalább 4 éjszaka foglalható." 
+                      : "High season (July-August): Minimum 4 nights required."}
+                  </p>
+                </div>
+              )}
 
-                {date?.from && isWithinInterval(date.from, { 
-  start: new Date(new Date().getFullYear(), 6, 1), 
-  end: new Date(new Date().getFullYear(), 7, 31) 
-}) && (
-  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-    <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
-      <CalendarDays size={20} />
-    </div>
-    <p className="text-sm font-medium text-amber-800">
-      {language === 'hu' 
-        ? "Főszezoni időszak (július-augusztus): Ebben az időszakban minimum 4 éjszaka foglalható." 
-        : "High season (July-August): A minimum of 4 nights is required during this period."}
-    </p>
-  </div>
-)}
+              <div className="flex justify-center mb-8 overflow-hidden w-full">
                 <Calendar
                   mode="range"
                   selected={date}
@@ -376,9 +376,7 @@ export default function BookingPage() {
                     <div className="space-y-2">
                       <Label htmlFor="adults" className="text-xs font-bold uppercase text-slate-400 tracking-wider">{t.booking.adults}</Label>
                       <Input 
-                        type="number" 
-                        min={1} 
-                        max={6} 
+                        type="number" min={1} max={6} 
                         value={adults} 
                         onChange={(e) => setAdults(Number(e.target.value))}
                         className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
@@ -387,9 +385,7 @@ export default function BookingPage() {
                     <div className="space-y-2">
                       <Label htmlFor="children" className="text-xs font-bold uppercase text-slate-400 tracking-wider">{t.booking.children}</Label>
                       <Input 
-                        type="number" 
-                        min={0} 
-                        max={5} 
+                        type="number" min={0} max={5} 
                         value={children} 
                         onChange={(e) => setChildren(Number(e.target.value))}
                         className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
