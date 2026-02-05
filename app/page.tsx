@@ -391,7 +391,7 @@ export default function BookingPage() {
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
                            <div className="bg-blue-50 p-2 rounded-lg text-blue-400"><Wind size={18} /></div>
-                           <span className="font-semibold text-slate-700">Klíma használat</span>
+                           <span className="font-semibold text-slate-700">Klíma használat (+2000Ft/éj)</span>
                         </div>
                         <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
                       </label>
