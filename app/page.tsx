@@ -393,29 +393,30 @@ export default function BookingPage() {
             </CardHeader>
             <CardContent className="px-6 md:px-8 pb-8">
               <form onSubmit={handleSubmit} className="space-y-8">
+                {/* JAVÍTOTT RÉSZ: Vendégek beállítása elcsúszás mentesen */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-5">
                   <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
                      <Users size={20} className="text-blue-500" /> Vendégek
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="adults" className="text-xs font-bold uppercase text-slate-400 tracking-wider">{t.booking.adults}</Label>
+                  <div className="flex flex-row gap-4">
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="adults" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">{t.booking.adults}</Label>
                       <Input 
                         type="number" min={1} max={6} 
                         value={adults} 
                         onFocus={handleInputFocus}
                         onChange={(e) => setAdults(e.target.value === '' ? 0 : Number(e.target.value))}
-                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
+                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center w-full"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="children" className="text-xs font-bold uppercase text-slate-400 tracking-wider">{t.booking.children}</Label>
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="children" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">{t.booking.children}</Label>
                       <Input 
                         type="number" min={0} max={5} 
                         value={children} 
                         onFocus={handleInputFocus}
                         onChange={(e) => setChildren(e.target.value === '' ? 0 : Number(e.target.value))}
-                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
+                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center w-full"
                       />
                     </div>
                   </div>
