@@ -4,13 +4,20 @@ import { sendConfirmationToGuest } from '@/lib/mail'; // Beimportáljuk a másik
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // Figyelj, hogy Promise legyen!
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params; // Itt az await a lényeg!
+    const bookingId = parseInt(id);
+
+    if (isNaN(bookingId)) {
+      return NextResponse.json({ error: 'Érvénytelen ID' }, { status: 400 });
+    }
+
     await prisma.booking.delete({
-      where: { id },
+      where: { id: bookingId },
     });
+
     return NextResponse.json({ message: 'Foglalás törölve' });
   } catch (error) {
     console.error('DELETE Error:', error);
