@@ -57,7 +57,11 @@ export default function BookingPage() {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [nights, setNights] = useState<number>(0);
 
-  // --- NAPTÁR NAVIGÁCIÓ JAVÍTÁSA ---
+  // --- FUNKCIÓ: Kiválasztja a szöveget fókuszkor, hogy gépeléskor eltűnjön az alapértelmezett szám ---
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+  };
+
   const nextMonth = () => setMonth(addMonths(month, 1));
   const prevMonth = () => setMonth(subMonths(month, 1));
 
@@ -145,14 +149,12 @@ export default function BookingPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    
     if (!date?.from || !date?.to) {
       alert(t.booking.select_dates); 
       return;
     }
 
     const nightCount = differenceInCalendarDays(date.to, date.from);
-
     const startOfSummer = new Date(new Date().getFullYear(), 6, 1); 
     const endOfSummer = new Date(new Date().getFullYear(), 7, 31); 
 
@@ -301,21 +303,16 @@ export default function BookingPage() {
               )}
 
               <div className="relative group">
-                {/* SAJÁT NAVIGÁCIÓS GOMBOK */}
                 <div className="absolute top-5 left-0 right-0 flex justify-between px-4 z-50 pointer-events-none">
                   <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="icon" 
+                    type="button" variant="outline" size="icon" 
                     className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
                     onClick={prevMonth}
                   >
                     <ChevronLeft className="h-5 w-5 text-slate-600" />
                   </Button>
                   <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="icon" 
+                    type="button" variant="outline" size="icon" 
                     className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
                     onClick={nextMonth}
                   >
@@ -325,7 +322,7 @@ export default function BookingPage() {
 
                 <div className="flex justify-center mb-8 w-full overflow-x-auto pb-4">
                   <Calendar
-                    key={month.toISOString()} // Ez kényszeríti az újrarajzolást lapozáskor
+                    key={month.toISOString()} 
                     mode="range"
                     selected={date}
                     onSelect={setDate}
@@ -345,12 +342,12 @@ export default function BookingPage() {
                       month: "space-y-4", 
                       caption: "flex justify-center pt-1 relative items-center mb-4",
                       caption_label: "text-lg font-bold text-slate-800",
-                      nav: "hidden", // Elrejtjük a hibás belső nyilakat
+                      nav: "hidden", 
                       table: "w-full border-collapse space-y-1",
                       head_row: "flex",
                       head_cell: "text-slate-400 rounded-md w-10 font-normal text-[0.8rem] flex justify-center items-center h-10",
                       row: "flex w-full mt-2",
-                      cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-blue-50/50 [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                      cell: "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
                       day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors flex items-center justify-center",
                       day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-700 focus:text-white shadow-md",
                       day_today: "bg-slate-100 text-slate-900 font-bold ring-1 ring-slate-300",
@@ -406,7 +403,8 @@ export default function BookingPage() {
                       <Input 
                         type="number" min={1} max={6} 
                         value={adults} 
-                        onChange={(e) => setAdults(Number(e.target.value))}
+                        onFocus={handleInputFocus}
+                        onChange={(e) => setAdults(e.target.value === '' ? 0 : Number(e.target.value))}
                         className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
                       />
                     </div>
@@ -415,7 +413,8 @@ export default function BookingPage() {
                       <Input 
                         type="number" min={0} max={5} 
                         value={children} 
-                        onChange={(e) => setChildren(Number(e.target.value))}
+                        onFocus={handleInputFocus}
+                        onChange={(e) => setChildren(e.target.value === '' ? 0 : Number(e.target.value))}
                         className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center"
                       />
                     </div>
@@ -424,14 +423,14 @@ export default function BookingPage() {
                   <div className="flex flex-col gap-3 pt-5 border-t border-slate-200">
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Dog size={18} /></div>
+                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform"><Dog size={18} /></div>
                            <span className="font-semibold text-slate-700">{t.booking.dog}</span>
                         </div>
                         <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
                       </label>
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
                         <div className="flex items-center gap-3">
-                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400"><Wind size={18} /></div>
+                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400 group-hover:scale-110 transition-transform"><Wind size={18} /></div>
                            <span className="font-semibold text-slate-700">Klíma használat (+2000Ft/éj)</span>
                         </div>
                         <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
