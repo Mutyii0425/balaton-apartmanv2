@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format, differenceInCalendarDays } from 'date-fns';
+import { format, differenceInCalendarDays, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -89,25 +89,36 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingBooking) return;
 
-    await fetch(`/api/bookings/${editingBooking.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: editingBooking.name,
-        email: editingBooking.email,
-        phone: editingBooking.phone,
-        adults: Number(editingBooking.adults),
-        children: Number(editingBooking.children),
-        guests: Number(editingBooking.adults) + Number(editingBooking.children),
-        hasDog: editingBooking.hasDog,
-        needsHeating: editingBooking.needsHeating,
-        startDate: editingBooking.startDate,
-        endDate: editingBooking.endDate,
-      }),
-    });
+    // Kiszámoljuk az összesített létszámot a biztonság kedvéért
+    const totalGuests = Number(editingBooking.adults) + Number(editingBooking.children);
 
-    setEditingBooking(null);
-    fetchData();
+    try {
+      const res = await fetch(`/api/bookings/${editingBooking.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editingBooking.name,
+          email: editingBooking.email,
+          phone: editingBooking.phone,
+          adults: Number(editingBooking.adults),
+          children: Number(editingBooking.children),
+          guests: totalGuests,
+          hasDog: editingBooking.hasDog,
+          needsHeating: editingBooking.needsHeating,
+          startDate: new Date(editingBooking.startDate).toISOString(),
+          endDate: new Date(editingBooking.endDate).toISOString(),
+        }),
+      });
+
+      if (res.ok) {
+        setEditingBooking(null);
+        fetchData();
+      } else {
+        alert("Hiba történt a mentés során.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async function approveReview(id: number) {
@@ -136,6 +147,15 @@ export default function AdminPage() {
       case 'szep_card': return { text: 'SZÉP Kártya', icon: <CreditCard className="w-4 h-4" />, color: 'bg-purple-100 text-purple-800 border-purple-200' };
       case 'cash': return { text: 'Készpénz', icon: <Banknote className="w-4 h-4" />, color: 'bg-green-100 text-green-800 border-green-200' };
       default: return { text: 'Ismeretlen', icon: <Banknote className="w-4 h-4" />, color: 'bg-gray-100 text-gray-600 border-gray-200' };
+    }
+  };
+
+  // Segédfüggvény a dátum formázásához az input mezőnek (YYYY-MM-DD)
+  const formatDateForInput = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), 'yyyy-MM-dd');
+    } catch (e) {
+      return "";
     }
   };
 
@@ -220,16 +240,14 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* EXTRÁK (Kutya, Fűtés) */}
                         <div className="flex flex-wrap gap-4 pt-1">
                           {booking.hasDog && <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50"><Dog className="w-3 h-3 mr-1" /> Kutya</Badge>}
-                          {booking.needsHeating && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50"><Flame className="w-3 h-3 mr-1" /> Fűtés</Badge>}
-                          {nightCount === 1 && <span className="text-[10px] text-amber-500 font-bold uppercase self-center tracking-tighter">* 1 éjszakás felár alkalmazva</span>}
+                          {booking.needsHeating && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50"><Flame className="w-3 h-3 mr-1" /> Klíma/Fűtés</Badge>}
                         </div>
 
                         <div className="flex flex-wrap gap-6 text-sm text-slate-500 pt-2 border-t border-slate-100">
-                          <div className="flex items-center gap-2 hover:text-blue-600 transition-colors cursor-pointer"><Mail className="w-4 h-4" /> {booking.email}</div>
-                          <div className="flex items-center gap-2 hover:text-blue-600 transition-colors cursor-pointer"><Phone className="w-4 h-4" /> {booking.phone || '-'}</div>
+                          <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {booking.email}</div>
+                          <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {booking.phone || '-'}</div>
                         </div>
                       </div>
 
@@ -288,13 +306,12 @@ export default function AdminPage() {
             ))}
           </div>
         )}
-
       </div>
 
       {/* --- SZERKESZTŐ MODAL --- */}
       {editingBooking && (
         <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="bg-slate-50 px-8 py-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold text-slate-800">Foglalás Szerkesztése</h2>
               <Button size="icon" variant="ghost" onClick={() => setEditingBooking(null)}><X className="w-5 h-5 text-slate-500" /></Button>
@@ -304,11 +321,19 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Érkezés</Label>
-                  <Input type="date" value={new Date(editingBooking.startDate).toISOString().split('T')[0]} onChange={(e) => setEditingBooking({...editingBooking, startDate: e.target.value})} />
+                  <Input 
+                    type="date" 
+                    value={formatDateForInput(editingBooking.startDate)} 
+                    onChange={(e) => setEditingBooking({...editingBooking, startDate: e.target.value})} 
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label>Távozás</Label>
-                  <Input type="date" value={new Date(editingBooking.endDate).toISOString().split('T')[0]} onChange={(e) => setEditingBooking({...editingBooking, endDate: e.target.value})} />
+                  <Input 
+                    type="date" 
+                    value={formatDateForInput(editingBooking.endDate)} 
+                    onChange={(e) => setEditingBooking({...editingBooking, endDate: e.target.value})} 
+                  />
                 </div>
               </div>
 
@@ -320,34 +345,63 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Felnőtt</Label>
-                  <Input type="number" value={editingBooking.adults} onChange={(e) => setEditingBooking({...editingBooking, adults: Number(e.target.value)})} />
+                  <Input 
+                    type="number" 
+                    value={editingBooking.adults} 
+                    onChange={(e) => setEditingBooking({...editingBooking, adults: Number(e.target.value)})} 
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label>Gyermek</Label>
-                  <Input type="number" value={editingBooking.children} onChange={(e) => setEditingBooking({...editingBooking, children: Number(e.target.value)})} />
+                  <Input 
+                    type="number" 
+                    value={editingBooking.children} 
+                    onChange={(e) => setEditingBooking({...editingBooking, children: Number(e.target.value)})} 
+                  />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Email</Label>
+                <Input value={editingBooking.email} onChange={(e) => setEditingBooking({...editingBooking, email: e.target.value})} />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Telefon</Label>
+                <Input value={editingBooking.phone || ""} onChange={(e) => setEditingBooking({...editingBooking, phone: e.target.value})} />
               </div>
 
               <div className="flex gap-6 pt-2">
                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={editingBooking.hasDog} onChange={(e) => setEditingBooking({...editingBooking, hasDog: e.target.checked})} className="w-4 h-4" />
+                    <input 
+                      type="checkbox" 
+                      checked={editingBooking.hasDog} 
+                      onChange={(e) => setEditingBooking({...editingBooking, hasDog: e.target.checked})} 
+                      className="w-4 h-4 accent-blue-600" 
+                    />
                     <span className="text-sm font-medium">Kutya 🐶</span>
                  </label>
                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={editingBooking.needsHeating} onChange={(e) => setEditingBooking({...editingBooking, needsHeating: e.target.checked})} className="w-4 h-4" />
-                    <span className="text-sm font-medium">Fűtés 🔥</span>
+                    <input 
+                      type="checkbox" 
+                      checked={editingBooking.needsHeating} 
+                      onChange={(e) => setEditingBooking({...editingBooking, needsHeating: e.target.checked})} 
+                      className="w-4 h-4 accent-blue-600" 
+                    />
+                    <span className="text-sm font-medium">Klíma/Fűtés ❄️🔥</span>
                  </label>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setEditingBooking(null)}>Mégse</Button>
-                <Button type="submit" className="bg-blue-600 text-white"><Save className="w-4 h-4 mr-2" /> Mentés</Button>
+                <Button type="submit" className="bg-blue-600 text-white shadow-lg shadow-blue-200">
+                  <Save className="w-4 h-4 mr-2" /> Mentés
+                </Button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </main>
   );
 }

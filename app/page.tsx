@@ -226,7 +226,7 @@ export default function BookingPage() {
               <li className="flex justify-between"><span>Vendégek:</span> <span className="font-medium">{adults} {t.booking.adults}, {children} {t.booking.children}</span></li>
               {nights === 1 && <li className="flex justify-between text-amber-600 font-bold"><span>Extra:</span> <span>+20% (1 éjszakás felár)</span></li>}
               {hasDog && <li className="flex justify-between text-blue-600"><span>Extra:</span> <span className="font-medium">🐶 {t.booking.dog}</span></li>}
-              {needsClimate && <li className="flex justify-between text-blue-400"><span>Extra:</span> <span className="font-medium">❄️ Klíma</span></li>}
+              {needsClimate && <li className="flex justify-between text-blue-400"><span>Extra:</span> <span className="font-medium">❄️ Klíma (+2000Ft/éj)</span></li>}
               
               <li className="flex justify-between text-slate-500 italic">
                 <span>Idegenforgalmi adó (helyszínen):</span>
