@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendReviewNotification } from '@/lib/mail';
 
 // 🛑 EZ A KÉT SOR NAGYON FONTOS!
 // Ez tiltja meg a rendszernek, hogy "emlékezzen" a régi adatokra.
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
         isApproved: false, 
       },
     });
+
+    await sendReviewNotification(newReview);
 
     return NextResponse.json(newReview, { status: 201 });
   } catch (error) {

@@ -34,7 +34,6 @@ function getDaysArray(start: string | Date, end: string | Date) {
   });
 }
 
-// Fizetési módok típus
 type PaymentMethod = 'cash' | 'card' | 'szep_card';
 
 export default function BookingPage() {
@@ -48,8 +47,6 @@ export default function BookingPage() {
   const [children, setChildren] = useState<number>(0);
   const [hasDog, setHasDog] = useState<boolean>(false);
   const [needsHeating, setNeedsHeating] = useState<boolean>(false);
-  
-  // ÚJ STATE A FIZETÉSHEZ
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
 
   const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
@@ -127,7 +124,13 @@ export default function BookingPage() {
       const dogPricePerNight = hasDog ? PRICES.DOG : 0;
       const heatingPricePerNight = needsHeating ? (aptsNeeded * PRICES.HEATING) : 0;
 
-      const nightlyTotal = adultPricePerNight + childPricePerNight + dogPricePerNight + heatingPricePerNight;
+      let nightlyTotal = adultPricePerNight + childPricePerNight + dogPricePerNight + heatingPricePerNight;
+
+      // 20% FELÁR 1 ÉJSZAKA ESETÉN
+      if (nightCount === 1) {
+        nightlyTotal = Math.round(nightlyTotal * 1.2);
+      }
+
       setTotalPrice(nightlyTotal * nightCount);
     } else {
       setTotalPrice(0);
@@ -149,7 +152,7 @@ export default function BookingPage() {
       children: children,
       hasDog: hasDog,
       needsHeating: needsHeating,
-      paymentMethod: paymentMethod, // ÚJ MEZŐ
+      paymentMethod: paymentMethod,
       totalPrice: totalPrice,
       startDate: date?.from,
       endDate: date?.to,
@@ -206,6 +209,7 @@ export default function BookingPage() {
             <p className="font-bold text-gray-900 uppercase tracking-wide text-xs mb-3">{t.booking.details}</p>
             <ul className="text-gray-700 space-y-2 text-sm">
               <li className="flex justify-between"><span>Vendégek:</span> <span className="font-medium">{adults} {t.booking.adults}, {children} {t.booking.children}</span></li>
+              {nights === 1 && <li className="flex justify-between text-amber-600 font-bold"><span>Extra:</span> <span>+20% (1 éjszakás felár)</span></li>}
               {hasDog && <li className="flex justify-between text-blue-600"><span>Extra:</span> <span className="font-medium">🐶 {t.booking.dog}</span></li>}
               {needsHeating && <li className="flex justify-between text-orange-600"><span>Extra:</span> <span className="font-medium">🔥 {t.booking.heating}</span></li>}
               
@@ -234,15 +238,12 @@ export default function BookingPage() {
   return (
     <main className="min-h-screen bg-gray-50/50 pt-28 pb-12 px-4 md:px-8">
       <div className="max-w-[1200px] mx-auto">
-        
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">{t.booking.title}</h1>
           <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light">{t.booking.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
-          
-          {/* NAPTÁR KÁRTYA */}
           <Card className="xl:col-span-2 shadow-xl border-gray-100 rounded-[2rem] overflow-hidden bg-white">
             <CardHeader className="bg-blue-50/50 border-b border-blue-50 p-6 md:p-8">
               <div className="flex items-center gap-4 mb-2">
@@ -255,7 +256,6 @@ export default function BookingPage() {
                   : (language === 'hu' ? "Kisebb létszámnál elég az egyik apartman." : "One apartment is enough for smaller groups.")}
               </CardDescription>
             </CardHeader>
-            
             <CardContent className="p-4 md:p-8">
               <div className="flex justify-center mb-8 overflow-hidden w-full">
                 <Calendar
@@ -295,7 +295,6 @@ export default function BookingPage() {
                   }}
                 />
               </div>
-              
               <div className="bg-slate-50 rounded-2xl p-4 md:p-6 text-center border border-slate-100">
                  <p className="text-lg md:text-xl text-slate-700 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
                     {date?.from ? (
@@ -319,7 +318,6 @@ export default function BookingPage() {
             </CardContent>
           </Card>
 
-          {/* KALKULÁCIÓ KÁRTYA */}
           <Card className="shadow-2xl border-t-8 border-t-blue-600 rounded-[2rem] bg-white h-fit sticky top-24 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-2"></div>
             <CardHeader className="pb-6 pt-8 px-6 md:px-8">
@@ -330,7 +328,6 @@ export default function BookingPage() {
             </CardHeader>
             <CardContent className="px-6 md:px-8 pb-8">
               <form onSubmit={handleSubmit} className="space-y-8">
-                
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-5">
                   <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
                      <Users size={20} className="text-blue-500" /> Vendégek
@@ -368,7 +365,6 @@ export default function BookingPage() {
                         </div>
                         <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
                       </label>
-
                       <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all group">
                         <div className="flex items-center gap-3">
                            <div className="bg-orange-100 p-2 rounded-lg text-orange-600 group-hover:scale-110 transition-transform"><Flame size={18} /></div>
@@ -378,9 +374,6 @@ export default function BookingPage() {
                       </label>
                   </div>
                 </div>
-
-                {/* FIZETÉSI MÓD VÁLASZTÓ */}
-                
 
                 <div className="space-y-4">
                     <div className="space-y-1">
@@ -417,7 +410,6 @@ export default function BookingPage() {
                         {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-green-600" />}
                       </div>
                     </button>
-
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('card')}
@@ -433,7 +425,6 @@ export default function BookingPage() {
                         {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
                       </div>
                     </button>
-
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('szep_card')}
@@ -452,14 +443,24 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900 text-white p-6 rounded-2xl flex items-center justify-between shadow-xl ring-4 ring-slate-100">
-                  <div>
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{t.booking.total}</p>
-                    <p className="text-sm text-slate-500 font-medium">{nights} {t.booking.night} / {adults + children} fő</p>
+                <div className="bg-slate-900 text-white p-6 rounded-2xl flex flex-col gap-2 shadow-xl ring-4 ring-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{t.booking.total}</p>
+                      <p className="text-sm text-slate-500 font-medium">{nights} {t.booking.night} / {adults + children} fő</p>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-extrabold text-yellow-400 tracking-tight">
+                      {totalPrice.toLocaleString('hu-HU')} <span className="text-lg text-yellow-600/80">Ft</span>
+                    </div>
                   </div>
-                  <div className="text-2xl md:text-3xl font-extrabold text-yellow-400 tracking-tight">
-                    {totalPrice.toLocaleString('hu-HU')} <span className="text-lg text-yellow-600/80">Ft</span>
-                  </div>
+                  
+                  {/* FIGYELMEZTETÉS 1 ÉJSZAKA ESETÉN */}
+                  {nights === 1 && (
+                    <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-amber-400 bg-amber-400/10 p-2 rounded-lg border border-amber-400/20 mt-1">
+                      <Calculator size={14} />
+                      <span>AZ ÁR TARTALMAZZA A 20% EGYSZAKÁS FELÁRAT</span>
+                    </div>
+                  )}
                 </div>
 
                 <Button type="submit" className="w-full text-lg h-14 font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl hover:shadow-blue-200 hover:-translate-y-1 transition-all" disabled={loading}>

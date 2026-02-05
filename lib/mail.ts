@@ -91,3 +91,34 @@ export async function sendConfirmationToGuest(booking: any) {
     console.error('Hiba a vendég email küldésekor:', error);
   }
 }
+
+// 3. ÉRTESÍTÉS ÚJ VÉLEMÉNYRŐL
+export async function sendReviewNotification(review: any) {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_USER, // Magadnak küldöd
+    subject: `⭐ ÚJ VÉLEMÉNY ÉRKEZETT: ${review.name}`,
+    html: `
+      <div style="font-family: sans-serif; border: 1px solid #e5e7eb; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #f59e0b;">Új véleményt írtak az oldalon!</h2>
+        <p><strong>Név:</strong> ${review.name}</p>
+        <p><strong>Értékelés:</strong> ${review.rating} / 5 ⭐</p>
+        <p><strong>Szöveg:</strong></p>
+        <div style="background-color: #f9fafb; padding: 15px; border-left: 4px solid #f59e0b; font-style: italic;">
+          "${review.text}"
+        </div>
+        <br/>
+        <a href="https://balaton-apartmanv2.vercel.app/admin" style="padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Jóváhagyás az Admin felületen
+        </a>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Vélemény értesítés elküldve.');
+  } catch (error) {
+    console.error('Hiba a vélemény email küldésekor:', error);
+  }
+}

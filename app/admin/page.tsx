@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
+import { format, differenceInCalendarDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,10 +10,10 @@ import { Label } from '@/components/ui/label';
 import { 
   Loader2, Trash2, CheckCircle, XCircle, Users, Home, Calendar, 
   Mail, Phone, Pencil, Save, X, Banknote, MessageSquare, 
-  ListTodo, ShieldCheck, CreditCard, Dog, Flame 
+  ListTodo, ShieldCheck, CreditCard, Dog, Flame, Calculator 
 } from 'lucide-react';
 
-// --- TÍPUSOK (Mindent megtartottam + hozzáadtam az újakat) ---
+// --- TÍPUSOK ---
 interface Booking {
   id: number;
   name: string;
@@ -69,7 +69,7 @@ export default function AdminPage() {
     }
   }
 
-  // --- MŰVELETEK (Megmaradt minden régi funkció) ---
+  // --- MŰVELETEK ---
   async function updateBookingStatus(id: number, newStatus: string) {
     await fetch(`/api/bookings/${id}`, {
       method: 'PATCH',
@@ -103,7 +103,6 @@ export default function AdminPage() {
         needsHeating: editingBooking.needsHeating,
         startDate: editingBooking.startDate,
         endDate: editingBooking.endDate,
-        // Itt az összes mezőt beküldjük, hogy ne vesszen el semmi
       }),
     });
 
@@ -176,6 +175,7 @@ export default function AdminPage() {
               bookings.map((booking) => {
                 const apt = getApartmentDetails(booking.apartmentId);
                 const payment = getPaymentMethodLabel(booking.paymentMethod);
+                const nightCount = differenceInCalendarDays(new Date(booking.endDate), new Date(booking.startDate));
 
                 return (
                   <Card key={booking.id} className="overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 rounded-2xl group">
@@ -188,6 +188,11 @@ export default function AdminPage() {
                           <Badge className={`text-sm px-3 py-1 rounded-full ${booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : booking.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
                             {booking.status === 'CONFIRMED' ? 'ELFOGADVA' : booking.status === 'REJECTED' ? 'ELUTASÍTVA' : 'FÜGGŐBEN'}
                           </Badge>
+                          {nightCount === 1 && (
+                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 animate-pulse">
+                              <Calculator className="w-3 h-3 mr-1" /> 20% FELÁR
+                            </Badge>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-sm">
@@ -207,16 +212,19 @@ export default function AdminPage() {
                             {payment.icon}
                             <span className="font-bold">{payment.text}</span>
                           </div>
-                          <div className="flex items-center gap-2 bg-yellow-50 p-3 rounded-xl border border-yellow-100 text-yellow-700">
+                          <div className="flex items-center gap-2 bg-yellow-50 p-3 rounded-xl border border-yellow-100 text-yellow-700 shadow-inner">
                             <Banknote className="w-4 h-4" />
-                            <span className="font-bold">{booking.totalPrice?.toLocaleString('hu-HU')} Ft</span>
+                            <span className="font-bold text-base">
+                              {booking.totalPrice?.toLocaleString('hu-HU')} Ft
+                            </span>
                           </div>
                         </div>
 
                         {/* EXTRÁK (Kutya, Fűtés) */}
-                        <div className="flex gap-4 pt-1">
+                        <div className="flex flex-wrap gap-4 pt-1">
                           {booking.hasDog && <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50"><Dog className="w-3 h-3 mr-1" /> Kutya</Badge>}
                           {booking.needsHeating && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50"><Flame className="w-3 h-3 mr-1" /> Fűtés</Badge>}
+                          {nightCount === 1 && <span className="text-[10px] text-amber-500 font-bold uppercase self-center tracking-tighter">* 1 éjszakás felár alkalmazva</span>}
                         </div>
 
                         <div className="flex flex-wrap gap-6 text-sm text-slate-500 pt-2 border-t border-slate-100">
@@ -251,7 +259,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* --- 2. VÉLEMÉNYEK LISTA (Érintetlen) --- */}
+        {/* --- 2. VÉLEMÉNYEK LISTA --- */}
         {activeTab === 'reviews' && (
           <div className="grid gap-6">
             {reviews.map((review) => (
@@ -283,7 +291,7 @@ export default function AdminPage() {
 
       </div>
 
-      {/* --- SZERKESZTŐ MODAL (Megmaradt a régi, de bővült az új mezőkkel) --- */}
+      {/* --- SZERKESZTŐ MODAL --- */}
       {editingBooking && (
         <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
