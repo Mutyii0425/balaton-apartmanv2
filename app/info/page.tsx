@@ -246,17 +246,18 @@ export default function InfoPage() {
             </div>
 
             <div className="h-[400px] lg:h-auto min-h-[400px] w-full relative">
-  <iframe 
-    width="100%" 
-    height="100%" 
-    style={{ border: 0 }} 
-    allowFullScreen={true} 
-    loading="lazy" 
-    referrerPolicy="no-referrer-when-downgrade"
-    className="grayscale-[20%] hover:grayscale-0 transition-all duration-700"
-    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2729.023223652873!2d17.3887163!3d46.7937402!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x476903264426555b%3A0xc07a82755e1c8491!2sBalatonederics%2C%20Sipostorok%20u.%203%2C%208312!5e0!3m2!1shu!2shu!4v1715000000000!5m2!1shu!2shu"
-  ></iframe>
-</div>
+               <iframe 
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                src="https://maps.google.com/maps?q=Balaton+Hegyvid%C3%A9ki+Apartman,+8312+Balatonederics,+Sipostorok+utca+3&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                style={{ border: 0 }} 
+                allowFullScreen={true} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                className="grayscale-[20%] hover:grayscale-0 transition-all duration-700"
+              ></iframe>
+            </div>
           </div>
         </section>
 
