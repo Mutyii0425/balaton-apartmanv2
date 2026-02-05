@@ -80,7 +80,7 @@ export default function InfoPage() {
             <p className="text-xl md:text-3xl text-white/90 max-w-3xl mx-auto font-light leading-relaxed mb-10 drop-shadow-md">
               {t.info.hero_subtitle}
             </p>
-            <Link href="/#booking">
+            <Link href="/">
               <Button size="lg" className="h-14 px-10 text-lg font-bold bg-white text-blue-900 hover:bg-blue-50 hover:scale-105 transition-all duration-300 shadow-xl rounded-full border-4 border-white/30 backdrop-blur-sm">
                 {t.hero.cta}
               </Button>
