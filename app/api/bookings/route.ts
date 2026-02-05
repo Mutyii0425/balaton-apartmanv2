@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendNotificationToAdmin } from '@/lib/mail'; // Beimportáljuk a függvényedet
 
+export async function GET() {
+  try {
+    const bookings = await prisma.booking.findMany({
+      orderBy: { createdAt: 'desc' } // Hogy a legfrissebb legyen felül
+    });
+    return NextResponse.json(bookings);
+  } catch (error) {
+    return NextResponse.json({ error: 'Hiba' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
