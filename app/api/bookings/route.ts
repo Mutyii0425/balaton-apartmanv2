@@ -1,20 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import nodemailer from 'nodemailer';
 
 export const dynamic = 'force-dynamic';
 
-// NAPTÁR BETÖLTÉSE (Ezt hívja a naptár oldal)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 export async function GET() {
   try {
     const bookings = await prisma.booking.findMany();
     return NextResponse.json(bookings);
   } catch (error) {
-    console.error("Lekérési hiba:", error);
-    return NextResponse.json({ error: 'Nem sikerült betölteni a naptárat' }, { status: 500 });
+    return NextResponse.json({ error: 'Hiba' }, { status: 500 });
   }
 }
 
-// ÚJ FOGLALÁS MENTÉSE (Ezt hívja a foglalási gomb)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -35,9 +41,25 @@ export async function POST(request: Request) {
         apartmentId: body.adults + body.children > 3 ? 3 : 1,
       },
     });
+
+    // Értesítés neked
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: 'ÚJ FOGLALÁSI IGÉNY ÉRKEZETT!',
+      text: `Vendég: ${body.name}\nIdőpont: ${body.startDate} - ${body.endDate}\nÖsszeg: ${body.totalPrice} Ft\nTelefon: ${body.phone}`,
+    });
+
+    // Nyugtázó a vendégnek
+    await transporter.sendMail({
+      from: `"Hegyvidéki Apartman" <${process.env.EMAIL_USER}>`,
+      to: body.email,
+      subject: 'Foglalási igényét megkaptuk',
+      html: `<p>Kedves ${body.name}!</p><p>Foglalási igényét rögzítettük. Hamarosan küldjük a végleges visszaigazolást!</p>`,
+    });
+
     return NextResponse.json(newBooking);
   } catch (error) {
-    console.error("Mentési hiba:", error);
-    return NextResponse.json({ error: 'Hiba a mentés során' }, { status: 500 });
+    return NextResponse.json({ error: 'Hiba' }, { status: 500 });
   }
 }
