@@ -29,7 +29,7 @@ export async function sendNotificationToAdmin(booking: any) {
     html: `
       <h2>Új foglalási igény érkezett!</h2>
       <p><strong>Név:</strong> ${booking.name}</p>
-      <p><strong>Dátum:</strong> ${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}</p>
+      <p><strong>Dátum:</strong> ${new Date(booking.startDate).toLocaleDateString('hu-HU')} - ${new Date(booking.endDate).toLocaleDateString('hu-HU')}</p>
       <p><strong>Létszám:</strong> ${booking.adults} felnőtt, ${booking.children} gyerek</p>
       <p><strong>Végösszeg:</strong> ${booking.totalPrice} Ft</p>
       
@@ -71,7 +71,7 @@ export async function sendConfirmationToGuest(booking: any) {
         
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 10px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Részletek:</h3>
-          <p>📅 <strong>Időpont:</strong> ${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}</p>
+          <p>📅 <strong>Időpont:</strong> ${new Date(booking.startDate).toLocaleDateString('hu-HU')} - ${new Date(booking.endDate).toLocaleDateString('hu-HU')}</p>
           <p>👥 <strong>Létszám:</strong> ${booking.adults} felnőtt, ${booking.children} gyermek</p>
           <p>💰 <strong>Fizetendő:</strong> ${booking.totalPrice} Ft</p>
           <p>💳 <strong>Választott fizetési mód:</strong> ${paymentText}</p>

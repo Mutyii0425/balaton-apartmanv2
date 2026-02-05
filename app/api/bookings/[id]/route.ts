@@ -1,16 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
-
-export const dynamic = 'force-dynamic';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+import { sendConfirmationToGuest } from '@/lib/mail'; // Beimportáljuk a másik függvényedet
 
 export async function PATCH(
   request: Request,
@@ -18,38 +8,20 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = await request.json(); // Itt jön pl: { status: 'CONFIRMED' }
     
     const updatedBooking = await prisma.booking.update({
       where: { id: parseInt(id) },
       data: body,
     });
 
-    // HA JÓVÁHAGYOD (Státusz CONFIRMED lesz)
+    // HA AZ ADMIN ELFOGADTA, MEGY A VENDÉGNEK A VISSZAIGAZOLÁS
     if (body.status === 'CONFIRMED') {
-      await transporter.sendMail({
-        from: `"Hegyvidéki Apartman" <${process.env.EMAIL_USER}>`,
-        to: updatedBooking.email,
-        subject: 'FOGLALÁS VISSZAIGAZOLVA!',
-        html: `<h1>Gratulálunk!</h1><p>A(z) ${new Date(updatedBooking.startDate).toLocaleDateString()} napra vonatkozó foglalását jóváhagytuk. Várjuk Önöket szeretettel!</p>`,
-      });
+      await sendConfirmationToGuest(updatedBooking);
     }
 
     return NextResponse.json(updatedBooking);
   } catch (error) {
-    return NextResponse.json({ error: 'Hiba' }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    await prisma.booking.delete({ where: { id: parseInt(id) } });
-    return NextResponse.json({ message: 'Törölve' });
-  } catch (error) {
-    return NextResponse.json({ error: 'Hiba' }, { status: 500 });
+    return NextResponse.json({ error: 'Hiba a frissítéskor' }, { status: 500 });
   }
 }
