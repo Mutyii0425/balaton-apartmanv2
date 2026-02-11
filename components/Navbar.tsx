@@ -34,7 +34,7 @@ export default function Navbar() {
           {/* LOGÓ - Mindig bal oldalon */}
           <div className="flex-shrink-0 flex items-center -ml-2">
             <Link 
-              href="/info" 
+              href="/#booking" 
               className="group flex flex-row items-baseline gap-1.5 font-extrabold text-lg sm:text-2xl tracking-tighter text-blue-900 transition-transform duration-300 hover:scale-105 whitespace-nowrap" 
               onClick={closeMenu}
             >
@@ -73,8 +73,8 @@ export default function Navbar() {
       >
         <div className="flex flex-col items-center justify-center p-8 space-y-6 min-h-[50vh]">
           
-          <MenuLink href="/info" onClick={closeMenu}>{t.nav.home}</MenuLink>
-          <MenuLink href="/#booking" onClick={closeMenu}>{t.nav.prices}</MenuLink>
+          <MenuLink href="/#booking" onClick={closeMenu}>{t.nav.home}</MenuLink>
+          <MenuLink href="/info" onClick={closeMenu}>{t.nav.prices}</MenuLink>
           <MenuLink href="/velemenyek" onClick={closeMenu}>{t.nav.guestbook}</MenuLink>
           <MenuLink href="/gyik" onClick={closeMenu}>{t.nav.faq}</MenuLink>
 
