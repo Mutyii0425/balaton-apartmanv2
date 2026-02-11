@@ -7,6 +7,29 @@ import { useLanguage } from './context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Wifi, Car, Utensils, Wind, MapPin, Mountain, Coffee, Baby, X, ChevronLeft, ChevronRight, Star, Phone, Calendar } from 'lucide-react';
 
+
+export const metadata = {
+  title: 'Balatonhegyvidéki Apartman - Pihenés és Panoráma',
+  description: 'Élvezze a nyugalmat és a csodás kilátást Balatonhegyvidéki Apartmanunkban. Modern szálláshely, kutyabarát környezet és felejthetetlen élmények a Balatonnál.',
+  keywords: ['Balaton', 'apartman', 'szállás', 'kiadó', 'kutyabarát', 'pihenés', 'nyaralás'],
+  openGraph: {
+    title: 'Balatonhegyvidéki Apartman',
+    description: 'Foglaljon szállást nálunk és élvezze a balatoni panorámát!',
+    url: 'https://www.balatonhegyvidekiapartman.hu',
+    siteName: 'Balatonhegyvidéki Apartman',
+    images: [
+      {
+        url: '/og-image.jpg', // Ha van egy szép képed a public mappában, ez jelenik meg Facebookon
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'hu_HU',
+    type: 'website',
+  },
+}
+
+
 export default function InfoPage() {
   const { t } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
