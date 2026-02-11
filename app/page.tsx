@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage } from './context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Wifi, Car, Utensils, Wind, MapPin, Mountain, Coffee, Baby, X, ChevronLeft, ChevronRight, Star, Phone, Calendar } from 'lucide-react';
 
@@ -83,7 +83,7 @@ export default function InfoPage() {
           <p className="text-lg md:text-3xl text-white/90 max-w-3xl mx-auto font-light leading-relaxed mb-8 drop-shadow-md px-4">
             {t.info.hero_subtitle}
           </p>
-          <Link href="/">
+          <Link href="/info">
             <Button size="lg" className="h-12 md:h-14 px-8 md:px-10 text-base md:text-lg font-bold bg-white text-blue-900 hover:bg-blue-50 rounded-full shadow-xl border-2 md:border-4 border-white/30">
               {t.hero.cta}
             </Button>
@@ -177,7 +177,7 @@ export default function InfoPage() {
                   <ContactInfo icon={<Calendar />} label="Nyitvatartás" value="Egész évben" />
               </div>
               <div className="mt-8">
-                <Link href="/">
+                <Link href="/info">
                   <Button className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-all">
                     {t.info.book_btn}
                   </Button>
