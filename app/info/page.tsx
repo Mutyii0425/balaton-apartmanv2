@@ -1,289 +1,521 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { useLanguage } from '../context/LanguageContext';
+import { useState, useEffect } from 'react';
+import { useLanguage } from "../app/context/LanguageContext"; 
+import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { Wifi, Car, Utensils, Wind, MapPin, Mountain, Coffee, Baby, X, ChevronLeft, ChevronRight, Star, Phone, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DateRange } from 'react-day-picker';
+import { format, eachDayOfInterval, differenceInCalendarDays, isWithinInterval, addMonths, subMonths } from 'date-fns';
+import { hu, de, enUS } from 'date-fns/locale'; 
+import { Loader2, CheckCircle, Calculator, Dog, Wind, CalendarDays, Users, Banknote, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function InfoPage() {
-  const { t } = useLanguage();
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+const PRICES = {
+  ADULT_1: 12000,
+  ADULT_2: 18000,
+  ADULT_3: 27500,
+  CHILD: 6000,
+  DOG: 2500,
+  CLIMATE: 2000 
+};
 
-  const INTERIOR_IMAGES = [
-    { src: "/images/balhalo.jpg", label: t.info.img_labels.bedroom },
-    { src: "/images/balhalo1.jpg", label: t.info.img_labels.living },
-    { src: "/images/balkonyha.jpg", label: t.info.img_labels.kitchen },
-    { src: "/images/balbejarat.jpg", label: t.info.img_labels.hall },
-    { src: "/images/balfurdo.jpg", label: t.info.img_labels.bath },
-  ];
+const localeMap = {
+  hu: hu,
+  de: de,
+  en: enUS
+};
 
-  const EXTERIOR_IMAGES = [
-    { src: "/images/bejarat.webp", label: t.info.img_labels.entrance },
-    { src: "/images/kilatas.webp", label: t.info.img_labels.view },
-    { src: "/images/udvar.webp", label: t.info.img_labels.yard },
-    { src: "/images/kiulo.webp", label: t.info.img_labels.pavilion },
-    { src: "/images/sutogeto.webp", label: t.info.img_labels.bbq },
-  ];
+function getDaysArray(start: string | Date, end: string | Date) {
+  return eachDayOfInterval({
+    start: new Date(start),
+    end: new Date(end),
+  });
+}
 
-  const ALL_IMAGES = [...INTERIOR_IMAGES, ...EXTERIOR_IMAGES];
+type PaymentMethod = 'cash' | 'card' | 'szep_card';
 
-  const openLightbox = (index: number) => {
-    setSelectedImageIndex(index);
-    document.body.style.overflow = 'hidden'; // Ne görögjön a háttér ha nyitva a kép
+export default function BookingPage() {
+  const { t, language } = useLanguage(); 
+
+  const [date, setDate] = useState<DateRange | undefined>();
+  const [month, setMonth] = useState<Date>(new Date());
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  
+  const [adults, setAdults] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
+  const [hasDog, setHasDog] = useState<boolean>(false);
+  const [needsClimate, setNeedsClimate] = useState<boolean>(false); 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+
+  const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [pendingDates, setPendingDates] = useState<Date[]>([]);
+
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [nights, setNights] = useState<number>(0);
+
+  // --- FUNKCIÓK ---
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
   };
 
-  const closeLightbox = () => {
-    setSelectedImageIndex(null);
-    document.body.style.overflow = 'unset';
-  };
-
-  const nextImage = useCallback(() => {
-    if (selectedImageIndex !== null) {
-      setSelectedImageIndex((prev) => (prev! + 1) % ALL_IMAGES.length);
-    }
-  }, [selectedImageIndex, ALL_IMAGES.length]);
-
-  const prevImage = useCallback(() => {
-    if (selectedImageIndex !== null) {
-      setSelectedImageIndex((prev) => (prev! - 1 + ALL_IMAGES.length) % ALL_IMAGES.length);
-    }
-  }, [selectedImageIndex, ALL_IMAGES.length]);
+  const nextMonth = () => setMonth(addMonths(month, 1));
+  const prevMonth = () => setMonth(subMonths(month, 1));
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedImageIndex === null) return;
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowRight') nextImage();
-      if (e.key === 'ArrowLeft') prevImage();
+    async function fetchBookings() {
+      try {
+        const res = await fetch('/api/bookings');
+        const data = await res.json();
+        
+        const counts: Record<string, number> = {};
+        const pending: Date[] = [];
+
+        data.forEach((booking: any) => {
+          const days = getDaysArray(booking.startDate, booking.endDate);
+          days.forEach(day => {
+            const dateStr = format(day, 'yyyy-MM-dd');
+            if (booking.status === 'CONFIRMED') {
+              const weight = booking.apartmentId === 3 ? 2 : 1;
+              counts[dateStr] = (counts[dateStr] || 0) + weight;
+            } else if (booking.status === 'PENDING') {
+              pending.push(day);
+            }
+          });
+        });
+
+        setOccupancyMap(counts);
+        setPendingDates(pending);
+      } catch (error) {
+        console.error("Nem sikerült betölteni a naptárat");
+      }
+    }
+    fetchBookings();
+  }, []);
+
+  useEffect(() => {
+    const totalGuests = adults + children;
+    const newBookedDates: Date[] = [];
+    for (const [dateStr, occupiedCount] of Object.entries(occupancyMap)) {
+      let isBlocked = false;
+      if (totalGuests >= 4) {
+        if (occupiedCount >= 1) isBlocked = true; 
+      } else {
+        if (occupiedCount >= 2) isBlocked = true; 
+      }
+      if (isBlocked) newBookedDates.push(new Date(dateStr));
+    }
+    setBookedDates(newBookedDates);
+
+    if (date?.from && date?.to) {
+      const nightCount = differenceInCalendarDays(date.to, date.from);
+      setNights(nightCount);
+
+      let adultPricePerNight = 0;
+      const aptsNeeded = totalGuests > 3 ? 2 : 1;
+
+      if (aptsNeeded === 1) {
+        if (adults === 1) adultPricePerNight = PRICES.ADULT_1;
+        else if (adults === 2) adultPricePerNight = PRICES.ADULT_2;
+        else if (adults === 3) adultPricePerNight = PRICES.ADULT_3;
+        else if (adults === 0) adultPricePerNight = 0; 
+      } else {
+        if (adults === 4) adultPricePerNight = PRICES.ADULT_2 * 2;
+        else if (adults === 5) adultPricePerNight = PRICES.ADULT_3 + PRICES.ADULT_2;
+        else if (adults === 6) adultPricePerNight = PRICES.ADULT_3 * 2;
+        else if (adults <= 3) adultPricePerNight = PRICES.ADULT_1 * 2;
+      }
+
+      const childPricePerNight = children * PRICES.CHILD;
+      const dogPricePerNight = hasDog ? PRICES.DOG : 0;
+      const climatePricePerNight = needsClimate ? (aptsNeeded * PRICES.CLIMATE) : 0;
+
+      let nightlyTotal = adultPricePerNight + childPricePerNight + dogPricePerNight + climatePricePerNight;
+
+      if (nightCount === 1) {
+        nightlyTotal = Math.round(nightlyTotal * 1.2);
+      }
+
+      setTotalPrice(nightlyTotal * nightCount);
+    } else {
+      setTotalPrice(0);
+      setNights(0);
+    }
+
+  }, [adults, children, hasDog, needsClimate, date, occupancyMap]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!date?.from || !date?.to) {
+      alert(t.booking.select_dates); 
+      return;
+    }
+
+    const nightCount = differenceInCalendarDays(date.to, date.from);
+    const startOfSummer = new Date(new Date().getFullYear(), 6, 1); 
+    const endOfSummer = new Date(new Date().getFullYear(), 7, 31); 
+
+    const isSummerBooking = isWithinInterval(date.from, { start: startOfSummer, end: endOfSummer }) || 
+                            isWithinInterval(date.to, { start: startOfSummer, end: endOfSummer });
+
+    if (isSummerBooking && nightCount < 4) {
+      alert(language === 'hu' 
+        ? "A július 1. és augusztus 31. közötti főszezonban minimum 4 éjszaka foglalható!" 
+        : "A minimum of 4 nights is required for bookings between July 1 and August 31!");
+      return;
+    }
+
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      adults: adults,
+      children: children,
+      hasDog: hasDog,
+      needsHeating: needsClimate, 
+      paymentMethod: paymentMethod,
+      totalPrice: totalPrice,
+      startDate: date.from,
+      endDate: date.to,
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImageIndex, nextImage, prevImage]);
+
+    const isConflict = bookedDates.some(bookedDay => 
+      (date.from && date.to && bookedDay >= date.from && bookedDay <= date.to)
+    );
+
+    if (isConflict) {
+      alert('Sajnáljuk, a választott időpontban nincs szabad hely.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setSuccess(true);
+      } else {
+        alert('Hiba történt a foglalás során.');
+      }
+    } catch (error) {
+      alert('Hálózati hiba.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50/50 p-4 pt-32">
+        <Card className="w-full max-w-md text-center p-8 border-green-500 border-2 shadow-2xl rounded-3xl bg-white">
+          <div className="flex justify-center mb-6">
+            <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+          </div>
+          <CardTitle className="text-3xl font-bold text-green-700 mb-2">{t.booking.success_title}</CardTitle>
+          <p className="text-gray-500 mb-8">{t.booking.success_msg}</p>
+          
+          <div className="bg-gray-50 p-6 rounded-2xl mb-8 text-left border border-gray-100 shadow-inner">
+            <p className="font-bold text-gray-900 uppercase tracking-wide text-xs mb-3">{t.booking.details}</p>
+            <ul className="text-gray-700 space-y-2 text-sm">
+              <li className="flex justify-between"><span>Vendégek:</span> <span className="font-medium">{adults} {t.booking.adults}, {children} {t.booking.children}</span></li>
+              {nights === 1 && <li className="flex justify-between text-amber-600 font-bold"><span>Extra:</span> <span>+20% (1 éjszakás felár)</span></li>}
+              {hasDog && <li className="flex justify-between text-blue-600"><span>Extra:</span> <span className="font-medium">🐶 {t.booking.dog}</span></li>}
+              {needsClimate && <li className="flex justify-between text-blue-400"><span>Extra:</span> <span className="font-medium">❄️ Klíma (+2000Ft/éj)</span></li>}
+              
+              <li className="flex justify-between text-slate-500 italic">
+                <span>Idegenforgalmi adó (helyszínen):</span>
+                <span>{(adults * nights * 500).toLocaleString('hu-HU')} Ft</span>
+              </li>
+
+              <li className="flex justify-between border-t pt-2 mt-2">
+                <span>Fizetési mód:</span>
+                <span className="font-medium capitalize text-slate-900">
+                  {paymentMethod === 'cash' ? 'Készpénz' : paymentMethod === 'card' ? 'Bankkártya' : 'SZÉP Kártya'}
+                </span>
+              </li>
+
+              <li className="flex justify-between border-t pt-2 mt-2 text-lg font-bold text-blue-900">
+                <span>Szállásdíj:</span>
+                <span>{totalPrice.toLocaleString('hu-HU')} Ft</span>
+              </li>
+            </ul>
+            <p className="text-[10px] text-slate-400 mt-2 text-center">
+              * Az IFA (500 Ft/fő/éj) 18 év felett fizetendő a helyszínen.
+            </p>
+          </div>
+          
+          <Button onClick={() => window.location.reload()} variant="outline" className="w-full h-12 rounded-xl border-2 border-green-600 text-green-700 hover:bg-green-50 font-bold">
+            {t.booking.back_to_calendar}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-gray-50/50">
-      
-      {/* 1. HERO SZEKCIÓ */}
-      <div className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
-        <div className="absolute inset-0">
-          <img 
-            src="/images/kilatas1.webp" 
-            alt="Balatonederics Panoráma" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-gray-50/90"></div>
+    <main className="min-h-screen bg-gray-50/50 pt-28 pb-12 px-4 md:px-8">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">{t.booking.title}</h1>
+          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light">{t.booking.subtitle}</p>
         </div>
-        
-        <div className="relative h-full max-w-[1400px] mx-auto px-4 flex flex-col items-center justify-center text-center">
-          <h1 className="text-4xl md:text-7xl font-extrabold text-white mb-4 drop-shadow-xl tracking-tight px-2">
-            {t.info.hero_title}
-          </h1>
-          <p className="text-lg md:text-3xl text-white/90 max-w-3xl mx-auto font-light leading-relaxed mb-8 drop-shadow-md px-4">
-            {t.info.hero_subtitle}
-          </p>
-          <Link href="/">
-            <Button size="lg" className="h-12 md:h-14 px-8 md:px-10 text-base md:text-lg font-bold bg-white text-blue-900 hover:bg-blue-50 rounded-full shadow-xl border-2 md:border-4 border-white/30">
-              {t.hero.cta}
-            </Button>
-          </Link>
-        </div>
-      </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-12 py-8 md:py-12">
-        
-        {/* 2. BEMUTATKOZÁS */}
-        <section className="mb-16 md:mb-24">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="order-2 md:order-1 space-y-4 md:space-y-6 text-center md:text-left">
-              <div className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm font-bold tracking-wide uppercase">
-                Balatonederics
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+          <Card className="xl:col-span-2 shadow-xl border-gray-100 rounded-[2rem] overflow-hidden bg-white">
+            <CardHeader className="bg-blue-50/50 border-b border-blue-50 p-6 md:p-8">
+              <div className="flex items-center gap-4 mb-2">
+                 <div className="p-3 bg-blue-100 rounded-xl text-blue-600"><CalendarDays size={28} /></div>
+                 <CardTitle className="text-2xl md:text-3xl text-blue-900 font-bold">{t.booking.calendar}</CardTitle>
               </div>
-              <h2 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight">
-                {t.info.intro_title}
-              </h2>
-              <div className="space-y-4 text-base md:text-lg text-slate-600 leading-relaxed">
-                <p>{t.info.intro_p1}</p>
-                <p>{t.info.intro_p2}</p>
-              </div>
-            </div>
+              <CardDescription className="text-blue-700/80 font-medium text-base md:text-lg pl-1">
+                {adults + children >= 4 
+                  ? (language === 'hu' ? "Nagyobb társaság esetén mindkét apartmanra szükség van." : "Both apartments needed for larger groups.") 
+                  : (language === 'hu' ? "Kisebb létszámnál elég az egyik apartman." : "One apartment is enough for smaller groups.")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 md:p-8">
+              {date?.from && isWithinInterval(date.from, { 
+                start: new Date(new Date().getFullYear(), 6, 1), 
+                end: new Date(new Date().getFullYear(), 7, 31) 
+              }) && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
+                    <CalendarDays size={20} />
+                  </div>
+                  <p className="text-sm font-semibold text-amber-900 leading-tight">
+                    {language === 'hu' 
+                      ? "Főszezoni időszak (július-augusztus): Ebben az időszakban legalább 4 éjszaka foglalható." 
+                      : "High season (July-August): Minimum 4 nights required."}
+                  </p>
+                </div>
+              )}
 
-            {/* FŐ KÉP - Javítva, hogy érintésre nyíljon */}
-            <div 
-              className="order-1 md:order-2 relative group cursor-pointer active:scale-95 transition-transform" 
-              onClick={() => {
-                const idx = ALL_IMAGES.findIndex(img => img.src === "/images/haz.webp");
-                openLightbox(idx !== -1 ? idx : 0);
-              }}
-            >
-               <div className="absolute inset-0 bg-blue-600 rounded-2xl md:rounded-3xl rotate-2 md:rotate-3 opacity-10"></div>
-               <img 
-                src="/images/haz.webp" 
-                alt="A ház kívülről" 
-                className="relative w-full h-[250px] md:h-[400px] object-cover rounded-2xl md:rounded-3xl shadow-2xl"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* 3. FELSZERELTSÉG */}
-        <section className="mb-16 md:mb-24">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <FeatureCard icon={<Wifi />} title={t.info.features.wifi_t} text={t.info.features.wifi_d} />
-            <FeatureCard icon={<Car />} title={t.info.features.parking_t} text={t.info.features.parking_d} />
-            <FeatureCard icon={<Wind />} title={t.info.features.ac_t} text={t.info.features.ac_d} />
-            <FeatureCard icon={<Mountain />} title={t.info.features.view_t} text={t.info.features.view_d} />
-            <FeatureCard icon={<Utensils />} title={t.info.features.bbq_t} text={t.info.features.bbq_d} />
-            <FeatureCard icon={<Coffee />} title={t.info.features.kitchen_t} text={t.info.features.kitchen_d} />
-            <FeatureCard icon={<Baby />} title={t.info.features.kids_t} text={t.info.features.kids_d} />
-            <FeatureCard icon={<MapPin />} title={t.info.features.beach_t} text={t.info.features.beach_d} />
-          </div>
-        </section>
-
-        {/* 4. GALÉRIA - Pontos indexelés a megnyitáshoz */}
-        <section className="mb-16 md:mb-24">
-          <div className="mb-12 md:mb-16">
-            <h4 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-              <span className="w-8 h-[2px] bg-blue-600"></span> {t.info.gallery_inside}
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
-              {INTERIOR_IMAGES.map((img, idx) => (
-                <Photo key={idx} src={img.src} label={img.label} onClick={() => openLightbox(idx)} />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-              <span className="w-8 h-[2px] bg-green-500"></span> {t.info.gallery_outside}
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
-              {EXTERIOR_IMAGES.map((img, idx) => (
-                <Photo key={idx} src={img.src} label={img.label} onClick={() => openLightbox(INTERIOR_IMAGES.length + idx)} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 5. TÉRKÉP ÉS KAPCSOLAT */}
-        <section className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden mb-12">
-          <div className="grid lg:grid-cols-2">
-            <div className="p-6 md:p-12 lg:p-16 flex flex-col justify-center">
-              <h3 className="text-2xl md:text-4xl font-extrabold text-blue-900 mb-6">{t.info.hero_title}</h3>
-              <div className="space-y-4">
-                  <ContactInfo icon={<MapPin />} label="Címünk" value={t.info.address} />
-                  <ContactInfo icon={<Phone />} label="Telefonszám" value="+36 30 360 5915" isLink href="tel:+36303605915" />
-                  <ContactInfo icon={<Calendar />} label="Nyitvatartás" value="Egész évben" />
-              </div>
-              <div className="mt-8">
-                <Link href="/">
-                  <Button className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-all">
-                    {t.info.book_btn}
+              <div className="relative group">
+                <div className="absolute top-5 left-0 right-0 flex justify-between px-4 z-50 pointer-events-none">
+                  <Button 
+                    type="button" variant="outline" size="icon" 
+                    className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
+                    onClick={prevMonth}
+                  >
+                    <ChevronLeft className="h-5 w-5 text-slate-600" />
                   </Button>
-                </Link>
+                  <Button 
+                    type="button" variant="outline" size="icon" 
+                    className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
+                    onClick={nextMonth}
+                  >
+                    <ChevronRight className="h-5 w-5 text-slate-600" />
+                  </Button>
+                </div>
+
+                <div className="flex justify-center mb-8 w-full overflow-x-auto pb-4">
+                  <Calendar
+                    key={month.toISOString()} 
+                    mode="range"
+                    selected={date}
+                    onSelect={setDate}
+                    month={month}
+                    onMonthChange={setMonth}
+                    locale={localeMap[language as keyof typeof localeMap]} 
+                    numberOfMonths={2}
+                    className="rounded-xl border border-gray-100 p-4 shadow-sm relative bg-white"
+                    disabled={[{ before: new Date() }, ...bookedDates]}
+                    modifiers={{ booked: bookedDates, pending: pendingDates }}
+                    modifiersClassNames={{
+                      booked: "bg-red-50 text-red-300 line-through decoration-red-300 opacity-60 cursor-not-allowed",
+                      pending: "bg-orange-100 text-orange-600 font-bold"
+                    }}
+                    classNames={{
+                      months: "flex flex-col md:flex-row space-y-4 md:space-x-8 md:space-y-0 justify-center",
+                      month: "space-y-4", 
+                      caption: "flex justify-center pt-1 relative items-center mb-4",
+                      caption_label: "text-lg font-bold text-slate-800",
+                      nav: "hidden", 
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex",
+                      head_cell: "text-slate-400 rounded-md w-10 font-normal text-[0.8rem] flex justify-center items-center h-10",
+                      row: "flex w-full mt-2",
+                      cell: "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                      day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors flex items-center justify-center",
+                      day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-700 focus:text-white shadow-md",
+                      day_today: "bg-slate-100 text-slate-900 font-bold ring-1 ring-slate-300",
+                      day_outside: "text-slate-300 opacity-50",
+                      day_disabled: "text-slate-300 opacity-50",
+                      day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-blue-900",
+                      day_hidden: "invisible",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-           <div className="h-[400px] lg:h-auto min-h-[400px] w-full relative">
-               <iframe 
-                width="100%" 
-                height="100%" 
-                frameBorder="0" 
-                src="https://maps.google.com/maps?q=Balaton+Hegyvid%C3%A9ki+Apartman,+8312+Balatonederics,+Sipostorok+utca+3&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                style={{ border: 0 }} 
-                allowFullScreen={true} 
-                loading="lazy" 
-                referrerPolicy="no-referrer-when-downgrade"
-                className="grayscale-[20%] hover:grayscale-0 transition-all duration-700"
-              ></iframe>
-            </div>
-          </div>
-        </section>
-      </div>
 
-      {/* --- LIGHTBOX - Javított mobil navigáció --- */}
-      {selectedImageIndex !== null && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center backdrop-blur-md" onClick={closeLightbox}>
-          <button className="absolute top-4 right-4 text-white p-3 bg-white/10 rounded-full z-[110]">
-            <X className="w-8 h-8" />
-          </button>
+              <div className="bg-slate-50 rounded-2xl p-4 md:p-6 text-center border border-slate-100">
+                 <p className="text-lg md:text-xl text-slate-700 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-blue-600">{format(date.from, 'yyyy. MM. dd.')}</span> 
+                            <span className="text-gray-300 hidden md:inline">|</span>
+                            <span className="font-bold text-blue-600">{format(date.to, 'yyyy. MM. dd.')}</span>
+                          </div>
+                          <span className="bg-blue-100 text-blue-800 text-sm py-1.5 px-4 rounded-full font-bold uppercase tracking-wide">
+                            {nights} {t.booking.night}
+                          </span>
+                        </>
+                      ) : (t.booking.select_end_date)
+                    ) : (
+                        <span className="text-gray-400 italic font-medium">{t.booking.select_dates}</span>
+                    )}
+                 </p>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {/* Előző kép gomb - Mobilon is látható de szolidabb */}
-            <button onClick={prevImage} className="absolute left-2 md:left-4 p-3 text-white/50 hover:text-white transition-all z-50">
-              <ChevronLeft className="w-10 h-10 md:w-16 md:h-16" />
-            </button>
+          <Card className="shadow-2xl border-t-8 border-t-blue-600 rounded-[2rem] bg-white h-fit sticky top-24 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-2"></div>
+            <CardHeader className="pb-6 pt-8 px-6 md:px-8">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-yellow-100 rounded-xl text-yellow-600 shadow-sm"><Calculator size={28} /></div>
+                    <CardTitle className="text-2xl font-bold text-slate-800">{t.booking.calc_title}</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent className="px-6 md:px-8 pb-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                
+                {/* VENDÉGEK SZEKCIÓ JAVÍTVA */}
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-5">
+                  <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
+                     <Users size={20} className="text-blue-500" /> Vendégek
+                  </div>
+                  
+                  {/* items-end biztosítja, hogy az inputok alja egy vonalban legyen */}
+                  <div className="flex flex-row gap-4 items-end">
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="adults" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block min-h-[35px]">
+                        {t.booking.adults}
+                      </Label>
+                      <Input 
+                        type="number" min={1} max={6} 
+                        value={adults} 
+                        onFocus={handleInputFocus}
+                        onChange={(e) => setAdults(e.target.value === '' ? 0 : Number(e.target.value))}
+                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center w-full"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="children" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block min-h-[35px] leading-tight">
+                        {t.booking.children} <span className="lowercase font-normal opacity-70">(2-14 év)</span>
+                      </Label>
+                      <Input 
+                        type="number" min={0} max={5} 
+                        value={children} 
+                        onFocus={handleInputFocus}
+                        onChange={(e) => setChildren(e.target.value === '' ? 0 : Number(e.target.value))}
+                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-3 pt-5 border-t border-slate-200">
+                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
+                        <div className="flex items-center gap-3">
+                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform"><Dog size={18} /></div>
+                           <span className="font-semibold text-slate-700">{t.booking.dog}</span>
+                        </div>
+                        <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
+                      </label>
+                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
+                        <div className="flex items-center gap-3">
+                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400 group-hover:scale-110 transition-transform"><Wind size={18} /></div>
+                           <span className="font-semibold text-slate-700">Klíma használat (+2000Ft/éj)</span>
+                        </div>
+                        <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
+                      </label>
+                  </div>
+                </div>
 
-            <img 
-              src={ALL_IMAGES[selectedImageIndex].src} 
-              alt="Nagyított kép" 
-              className="max-w-[98vw] max-h-[70vh] md:max-h-[85vh] object-contain shadow-2xl"
-              onClick={nextImage} // Képre kattintva is továbblép (kényelmes mobilon)
-            />
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <Label className="text-slate-500 font-medium pl-1">{t.booking.name}</Label>
+                        <Input name="name" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-slate-500 font-medium pl-1">{t.booking.email}</Label>
+                        <Input name="email" type="email" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-slate-500 font-medium pl-1">{t.booking.phone}</Label>
+                        <Input name="phone" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
+                    </div>
+                </div>
 
-            <div className="mt-4 text-center px-4">
-              <p className="text-white text-lg md:text-2xl font-medium">{ALL_IMAGES[selectedImageIndex].label}</p>
-              <p className="text-white/40 text-sm">{selectedImageIndex + 1} / {ALL_IMAGES.length}</p>
-            </div>
+                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
+                     <Banknote size={20} className="text-green-600" /> Fizetési mód
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button type="button" onClick={() => setPaymentMethod('cash')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'cash' ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${paymentMethod === 'cash' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}><Banknote size={20} /></div>
+                        <span className="font-semibold text-slate-700">Készpénz</span>
+                      </div>
+                      {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-green-600" />}
+                    </button>
+                    <button type="button" onClick={() => setPaymentMethod('card')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'card' ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${paymentMethod === 'card' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}><CreditCard size={20} /></div>
+                        <span className="font-semibold text-slate-700">Bankkártya</span>
+                      </div>
+                      {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                    </button>
+                    <button type="button" onClick={() => setPaymentMethod('szep_card')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'szep_card' ? 'bg-purple-50 border-purple-300' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${paymentMethod === 'szep_card' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}><CreditCard size={20} /></div>
+                        <span className="font-semibold text-slate-700">SZÉP Kártya</span>
+                      </div>
+                      {paymentMethod === 'szep_card' && <div className="w-2.5 h-2.5 rounded-full bg-purple-600" />}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Következő kép gomb */}
-            <button onClick={nextImage} className="absolute right-2 md:right-4 p-3 text-white/50 hover:text-white transition-all z-50">
-              <ChevronRight className="w-10 h-10 md:w-16 md:h-16" />
-            </button>
-          </div>
+                <div className="bg-slate-900 text-white p-6 rounded-2xl flex flex-col gap-2 shadow-xl ring-4 ring-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{t.booking.total}</p>
+                      <p className="text-sm text-slate-500 font-medium">{nights} {t.booking.night} / {adults + children} fő</p>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-extrabold text-yellow-400 tracking-tight">
+                      {totalPrice.toLocaleString('hu-HU')} <span className="text-lg text-yellow-600/80">Ft</span>
+                    </div>
+                  </div>
+                  {nights === 1 && (
+                    <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-amber-400 bg-amber-400/10 p-2 rounded-lg border border-amber-400/20 mt-1">
+                      <Calculator size={14} />
+                      <span>AZ ÁR TARTALMAZZA A 20% EGYSZAKÁS FELÁRAT</span>
+                    </div>
+                  )}
+                </div>
+
+                <Button type="submit" className="w-full text-lg h-14 font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all" disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin mr-2" /> : t.booking.send}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
-      )}
+      </div>
     </main>
-  );
-}
-
-// --- SEGÉDKOMPONENSEK ---
-
-function ContactInfo({ icon, label, value, isLink, href }: any) {
-  return (
-    <div className="flex items-start gap-3 md:gap-4">
-      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
-        {icon}
-      </div>
-      <div>
-        <p className="font-bold text-slate-900 text-sm md:text-base">{label}</p>
-        {isLink ? (
-          <a href={href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm md:text-base">{value}</a>
-        ) : (
-          <p className="text-slate-600 text-sm md:text-base">{value}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FeatureCard({ icon, title, text }: { icon: any, title: string, text: string }) {
-  return (
-    <div className="bg-white p-4 md:p-8 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 text-center md:text-left flex flex-col items-center md:items-start">
-      <div className="mb-4 text-blue-600 h-10 w-10 md:h-12 md:w-12 [&>svg]:w-full [&>svg]:h-full bg-blue-50 p-2 rounded-xl">
-        {icon}
-      </div>
-      <h4 className="font-bold text-slate-900 mb-1 text-sm md:text-lg">{title}</h4>
-      <span className="text-[11px] md:text-sm text-slate-500 font-medium leading-tight">{text}</span>
-    </div>
-  );
-}
-
-function Photo({ src, label, onClick }: { src: string, label: string, onClick?: () => void }) {
-  return (
-    <div 
-      onClick={onClick}
-      className="relative overflow-hidden rounded-xl md:rounded-2xl cursor-pointer aspect-[4/3] shadow-md active:scale-95 transition-transform"
-    >
-      <img 
-        src={src} 
-        alt={label} 
-        className="w-full h-full object-cover"
-        loading="lazy"
-      />
-      {/* Mobilon is látható legyen a felirat, de ne takarja a kattintást */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-3 md:p-6 pointer-events-none">
-        <span className="text-white font-bold text-xs md:text-lg">{label}</span>
-      </div>
-    </div>
   );
 }
