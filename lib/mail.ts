@@ -2,10 +2,16 @@ import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS, // Ide mindenképp az új 16 jegyű kód kell a Vercelen!
   },
+  tls: {
+    rejectUnauthorized: false // Ez kötelező Vercelen a hitelesítéshez
+  }
 });
 
 // SEGÉDFÜGGVÉNY: Fizetési mód szép kiírása
