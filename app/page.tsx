@@ -8,20 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Wifi, Car, Utensils, Wind, MapPin, Mountain, Coffee, Baby, X, ChevronLeft, ChevronRight, Star, Phone, Calendar } from 'lucide-react';
 
 
-export const metadata = {
-  title: 'Balatonhegyvidéki Apartman - Pihenés és Panoráma',
-  description: 'Élvezze a nyugalmat és a csodás kilátást Balatonhegyvidéki Apartmanunkban. Modern szálláshely, kutyabarát környezet és felejthetetlen élmények a Balatonnál.',
-  keywords: ['Balaton', 'apartman', 'szállás', 'kiadó', 'kutyabarát', 'pihenés', 'nyaralás'],
-  openGraph: {
-    title: 'Balatonhegyvidéki Apartman',
-    description: 'Foglaljon szállást nálunk és élvezze a balatoni panorámát!',
-    url: 'https://www.balatonhegyvidekiapartman.hu',
-    siteName: 'Balatonhegyvidéki Apartman',
-    
-    locale: 'hu_HU',
-    type: 'website',
-  },
-}
 
 
 export default function InfoPage() {
