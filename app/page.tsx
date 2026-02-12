@@ -17,13 +17,7 @@ export const metadata = {
     description: 'Foglaljon szállást nálunk és élvezze a balatoni panorámát!',
     url: 'https://www.balatonhegyvidekiapartman.hu',
     siteName: 'Balatonhegyvidéki Apartman',
-    images: [
-      {
-        url: '/og-image.jpg', // Ha van egy szép képed a public mappában, ez jelenik meg Facebookon
-        width: 1200,
-        height: 630,
-      },
-    ],
+    
     locale: 'hu_HU',
     type: 'website',
   },
