@@ -14,9 +14,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// PROFI METAADATOK A JOBB KERESÉSI TALÁLATOKÉRT
 export const metadata: Metadata = {
-  title: "Balaton Hegyvidéki Apartman", // Átírtam a címet szebbre :)
-  description: "Pihenés a Balatonnál",
+  title: "Balatonhegyvidéki Apartman | Panorámás Szállás a Balatonnál",
+  description: "Élvezze a nyugalmat és a csodálatos panorámát modern apartmanunkban. Tökéletes kikapcsolódás a Balaton-felvidéken. Foglaljon most!",
+  keywords: ["apartman", "Balaton", "szállás", "kiadó apartman", "Balaton-felvidék", "panoráma"],
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -25,16 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="hu"> {/* ÁTÍRVA MAGYARRA, hogy a böngésző ne akarja lefordítani */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 2. ITT KEZDŐDIK A CSOMAGOLÁS */}
         <LanguageProvider>
           <Navbar />
           {children}
         </LanguageProvider>
-        {/* ITT VÉGZŐDIK */}
       </body>
     </html>
   );
