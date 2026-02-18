@@ -38,8 +38,8 @@ export default function Navbar() {
               className="group flex flex-row items-baseline gap-1.5 font-extrabold text-lg sm:text-2xl tracking-tighter text-blue-900 transition-transform duration-300 hover:scale-105 whitespace-nowrap" 
               onClick={closeMenu}
             >
-              <span>Balatonhegyvidéki </span>
-              <span className="text-blue-600 transition-colors group-hover:text-blue-500">Apartman</span>
+              <span>Balaton</span>
+              <span className="text-blue-600 transition-colors group-hover:text-blue-500">Hegyvidéki Apartman</span>
             </Link>
           </div>
 
