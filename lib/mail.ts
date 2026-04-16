@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // KONFIGURÁCIÓ
 // Amíg nincs saját domained a Resendben, hagyd ezt: 'onboarding@resend.dev'
-const FROM_EMAIL = 'onboarding@resend.dev'; 
+const FROM_EMAIL = 'info@balatonhegyvidekiapartman.hu'; 
 // Ide érkezzenek az admin értesítések (a te címed)
 const ADMIN_EMAIL = 'hegyvidekiapartman@gmail.com'; 
 
