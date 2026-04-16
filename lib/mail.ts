@@ -1,141 +1,121 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Ide mindenképp az új 16 jegyű kód kell a Vercelen!
-  },
-  tls: {
-    rejectUnauthorized: false // Ez kötelező Vercelen a hitelesítéshez
-  }
-});
+// Inicializálás a Vercel környezeti változóval
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// SEGÉDFÜGGVÉNY: Fizetési mód szép kiírása
-const getPaymentLabel = (method?: string) => {
-  switch (method) {
-    case 'card': return '💳 Bankkártya';
-    case 'szep_card': return '💳 SZÉP Kártya';
-    case 'cash': return '💵 Készpénz';
-    default: return '❓ Nem választott / Ismeretlen';
-  }
+// KONFIGURÁCIÓ
+// Amíg nincs saját domained a Resendben, hagyd ezt: 'onboarding@resend.dev'
+const FROM_EMAIL = 'onboarding@resend.dev'; 
+// Ide érkezzenek az admin értesítések (a te címed)
+const ADMIN_EMAIL = 'hegyvidekiapartman@gmail.com'; 
+
+/**
+ * Segédfüggvény a fizetési módok magyarításához
+ */
+const getPaymentLabel = (method?: string): string => {
+  const methods: Record<string, string> = {
+    card: '💳 Bankkártya',
+    szep_card: '💳 SZÉP Kártya',
+    cash: '💵 Készpénz',
+  };
+  return methods[method as string] || '❓ Nem választott / Ismeretlen';
 };
 
-// 1. ÉRTESÍTÉS NEKED (Új foglalás jött)
+/**
+ * IFA számítása (500 Ft/fő/éj)
+ */
+const calculateIFA = (adults: number, startDate: string, endDate: string): number => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const nights = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  return adults * nights * 500;
+};
+
+// 1. ÉRTESÍTÉS AZ ADMINNAK (Új foglalás)
 export async function sendNotificationToAdmin(booking: any) {
   const paymentText = getPaymentLabel(booking.paymentMethod);
-  
-  // IFA Számítás
-  const nights = Math.max(1, Math.round((new Date(booking.endDate).getTime() - new Date(booking.startDate).getTime()) / (1000 * 60 * 60 * 24)));
-  const ifaTotal = booking.adults * nights * 500;
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER, 
-    subject: `📢 ÚJ FOGLALÁS: ${booking.name}`,
-    html: `
-      <h2>Új foglalási igény érkezett!</h2>
-      <p><strong>Név:</strong> ${booking.name}</p>
-      <p><strong>Dátum:</strong> ${new Date(booking.startDate).toLocaleDateString('hu-HU')} - ${new Date(booking.endDate).toLocaleDateString('hu-HU')} (${nights} éj)</p>
-      <p><strong>Létszám:</strong> ${booking.adults} felnőtt, ${booking.children} gyerek</p>
-      <p><strong>Szállásdíj:</strong> ${booking.totalPrice.toLocaleString('hu-HU')} Ft</p>
-      <p><strong>Helyszínen fizetendő IFA:</strong> ${ifaTotal.toLocaleString('hu-HU')} Ft</p>
-      
-      <p style="font-size: 16px; color: #d97706; background-color: #fffbeb; padding: 5px; border-radius: 4px; display: inline-block;">
-        <strong>Fizetési mód: ${paymentText}</strong>
-      </p>
-      
-      <p><strong>Kutya:</strong> ${booking.hasDog ? 'IGEN 🐶' : 'Nem'}</p>
-      <p><strong>Fűtés:</strong> ${booking.needsHeating ? 'IGEN 🔥' : 'Nem'}</p>
-      <p><strong>Email:</strong> ${booking.email}</p>
-      <p><strong>Telefon:</strong> ${booking.phone}</p>
-      <br/>
-      <a href="https://balatonhegyvidekiapartman.hu/admin" style="padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">
-        Kezelés az Admin felületen
-      </a>
-    `,
-  };
+  const ifaTotal = calculateIFA(booking.adults, booking.startDate, booking.endDate);
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Admin értesítve.');
-  } catch (error) {
-    console.error('Hiba az admin email küldésekor:', error);
+    const { data, error } = await resend.emails.send({
+      from: `Apartman Értesítő <${FROM_EMAIL}>`,
+      to: ADMIN_EMAIL,
+      subject: `📢 ÚJ FOGLALÁS: ${booking.name}`,
+      html: `
+        <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
+          <h2 style="color: #2563eb; border-bottom: 2px solid #eee; padding-bottom: 10px;">Új foglalási igény!</h2>
+          <p><strong>Vendég:</strong> ${booking.name}</p>
+          <p><strong>Email:</strong> ${booking.email}</p>
+          <p><strong>Telefon:</strong> ${booking.phone}</p>
+          <hr style="border: 0; border-top: 1px solid #eee;" />
+          <p><strong>Időszak:</strong> ${new Date(booking.startDate).toLocaleDateString('hu-HU')} - ${new Date(booking.endDate).toLocaleDateString('hu-HU')}</p>
+          <p><strong>Létszám:</strong> ${booking.adults} felnőtt, ${booking.children} gyermek</p>
+          <p><strong>Fizetési mód:</strong> ${paymentText}</p>
+          <p><strong>Szállásdíj:</strong> ${booking.totalPrice?.toLocaleString('hu-HU')} Ft</p>
+          <p style="color: #d97706;"><strong>Helyszínen fizetendő IFA:</strong> ${ifaTotal.toLocaleString('hu-HU')} Ft</p>
+          <div style="background: #f9fafb; padding: 10px; margin-top: 15px; border-radius: 8px;">
+             <p>🐶 Kutya: ${booking.hasDog ? 'Van' : 'Nincs'}</p>
+             <p>🔥 Fűtés: ${booking.needsHeating ? 'Kér' : 'Nem kér'}</p>
+          </div>
+          <br/>
+          <a href="https://balatonhegyvidekiapartman.hu/admin" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Admin megnyitása</a>
+        </div>
+      `,
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('[Resend Admin Error]:', err);
+    return { success: false, error: err };
   }
 }
 
-// 2. ÉRTESÍTÉS A VENDÉGNEK (Elfogadtuk a foglalást)
+// 2. ÉRTESÍTÉS A VENDÉGNEK
 export async function sendConfirmationToGuest(booking: any) {
   const paymentText = getPaymentLabel(booking.paymentMethod);
-
-  // IFA Számítás
-  const nights = Math.max(1, Math.round((new Date(booking.endDate).getTime() - new Date(booking.startDate).getTime()) / (1000 * 60 * 60 * 24)));
-  const ifaTotal = booking.adults * nights * 500;
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: booking.email, 
-    subject: `✅ Foglalás Visszaigazolása - Balaton Hegyvidéki Apartman`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #16a34a;">Kedves ${booking.name}!</h2>
-        <p>Örömmel értesítünk, hogy a foglalásodat <strong>ELFOGADTUK</strong>!</p>
-        
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 10px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Részletek:</h3>
-          <p>📅 <strong>Időpont:</strong> ${new Date(booking.startDate).toLocaleDateString('hu-HU')} - ${new Date(booking.endDate).toLocaleDateString('hu-HU')} (${nights} éjszaka)</p>
-          <p>👥 <strong>Létszám:</strong> ${booking.adults} felnőtt, ${booking.children} gyermek</p>
-          <p>💰 <strong>Fizetendő szállásdíj:</strong> ${booking.totalPrice.toLocaleString('hu-HU')} Ft</p>
-          <p>💳 <strong>Választott fizetési mód:</strong> ${paymentText}</p>
-          <p style="color: #b45309; font-weight: bold;">Helyszínen fizetendő IFA: ${ifaTotal.toLocaleString('hu-HU')} Ft</p>
-          <p style="font-size: 11px; color: #64748b;">* Az Idegenforgalmi Adó (IFA) 500 Ft/fő/éj 18 év felett, mely a helyszínen fizetendő.</p>
-          <p>📍 <strong>Cím:</strong> 8312 Balatonederics, Sipostorok utca 3.</p>
-        </div>
-
-        <p>Szeretettel várunk titeket! Ha bármi kérdésed van, keress minket bizalommal.</p>
-        <p>Üdvözlettel,<br/>Balaton Hegyvidéki Apartman</p>
-      </div>
-    `,
-  };
+  const ifaTotal = calculateIFA(booking.adults, booking.startDate, booking.endDate);
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Vendég értesítve.');
-  } catch (error) {
-    console.error('Hiba a vendég email küldésekor:', error);
+    const { data, error } = await resend.emails.send({
+      from: `Balaton Hegyvidéki Apartman <${FROM_EMAIL}>`,
+      to: booking.email,
+      subject: `✅ Foglalás Visszaigazolása`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #444;">
+          <h2 style="color: #16a34a;">Kedves ${booking.name}!</h2>
+          <p>Örömmel értesítünk, hogy a foglalásodat <strong>visszaigazoltuk</strong>.</p>
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb;">
+            <p>📅 <strong>Időpont:</strong> ${new Date(booking.startDate).toLocaleDateString('hu-HU')} - ${new Date(booking.endDate).toLocaleDateString('hu-HU')}</p>
+            <p>💰 <strong>Szállásdíj:</strong> ${booking.totalPrice?.toLocaleString('hu-HU')} Ft</p>
+            <p>💳 <strong>Fizetés:</strong> ${paymentText}</p>
+            <p style="color: #b45309;"><strong>Helyszínen fizetendő IFA:</strong> ${ifaTotal.toLocaleString('hu-HU')} Ft</p>
+          </div>
+          <p style="margin-top: 20px;">📍 <strong>Cím:</strong> 8312 Balatonederics, Sipostorok utca 3.</p>
+          <p>Várjuk érkezéseteket!</p>
+        </div>
+      `,
+    });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('[Resend Guest Error]:', err);
+    return { success: false, error: err };
   }
 }
 
-// 3. ÉRTESÍTÉS ÚJ VÉLEMÉNYRŐL
+// 3. VÉLEMÉNY ÉRKEZETT
 export async function sendReviewNotification(review: any) {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER, 
-    subject: `⭐ ÚJ VÉLEMÉNY ÉRKEZETT: ${review.name}`,
-    html: `
-      <div style="font-family: sans-serif; border: 1px solid #e5e7eb; padding: 20px; border-radius: 10px;">
-        <h2 style="color: #f59e0b;">Új véleményt írtak az oldalon!</h2>
-        <p><strong>Név:</strong> ${review.name}</p>
-        <p><strong>Értékelés:</strong> ${review.rating} / 5 ⭐</p>
-        <p><strong>Szöveg:</strong></p>
-        <div style="background-color: #f9fafb; padding: 15px; border-left: 4px solid #f59e0b; font-style: italic;">
-          "${review.text}"
-        </div>
-        <br/>
-        <a href="https://balatonhegyvidekiapartman.hu/admin" style="padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-          Jóváhagyás az Admin felületen
-        </a>
-      </div>
-    `,
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Vélemény értesítés elküldve.');
-  } catch (error) {
-    console.error('Hiba a vélemény email küldésekor:', error);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject: `⭐ ÚJ VÉLEMÉNY: ${review.name}`,
+      html: `<h3>Új értékelés: ${review.rating}/5</h3><p>${review.text}</p>`,
+    });
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err };
   }
 }
