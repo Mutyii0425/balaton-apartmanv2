@@ -1,11 +1,14 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useLanguage } from './context/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Wifi, Car, Utensils, Wind, MapPin, Mountain, Coffee, Baby, X, ChevronLeft, ChevronRight, Phone, Calendar, ArrowRight, Sparkles } from 'lucide-react';
+import { Wifi, Car, Utensils, Wind, MapPin, Mountain, Coffee, Baby, X, ChevronLeft, ChevronRight, Star, Phone, Calendar } from 'lucide-react';
+
+
+
 
 export default function InfoPage() {
   const { t } = useLanguage();
@@ -31,23 +34,21 @@ export default function InfoPage() {
 
   const openLightbox = (index: number) => {
     setSelectedImageIndex(index);
-    document.body.style.overflow = 'hidden'; 
+    document.body.style.overflow = 'hidden'; // Ne görögjön a háttér ha nyitva a kép
   };
 
-  const closeLightbox = useCallback(() => {
+  const closeLightbox = () => {
     setSelectedImageIndex(null);
     document.body.style.overflow = 'unset';
-  }, []);
+  };
 
-  const nextImage = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const nextImage = useCallback(() => {
     if (selectedImageIndex !== null) {
       setSelectedImageIndex((prev) => (prev! + 1) % ALL_IMAGES.length);
     }
   }, [selectedImageIndex, ALL_IMAGES.length]);
 
-  const prevImage = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const prevImage = useCallback(() => {
     if (selectedImageIndex !== null) {
       setSelectedImageIndex((prev) => (prev! - 1 + ALL_IMAGES.length) % ALL_IMAGES.length);
     }
@@ -62,93 +63,76 @@ export default function InfoPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImageIndex, nextImage, prevImage, closeLightbox]);
+  }, [selectedImageIndex, nextImage, prevImage]);
 
   return (
-    <main className="min-h-screen bg-stone-50 font-sans pb-24 md:pb-0 selection:bg-amber-500 selection:text-white">
+    <main className="min-h-screen bg-gray-50/50">
       
-      {/* 1. PRÉMIUM HERO SZEKCIÓ */}
-      <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
+      {/* 1. HERO SZEKCIÓ */}
+      <div className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
         <div className="absolute inset-0">
-          <Image 
+          <img 
             src="/images/kilatas1.webp" 
-            alt="Panoráma kilátás" 
-            fill
-            priority
-            className="object-cover scale-105 animate-slow-zoom"
+            alt="Balatonederics Panoráma" 
+            className="w-full h-full object-cover"
           />
-          {/* Elegáns sötétítő gradiens */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/40 to-stone-50/95"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-gray-50/90"></div>
         </div>
         
-        <div className="relative h-full max-w-6xl mx-auto px-4 flex flex-col items-center justify-center text-center pt-10">
-          <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-md text-amber-400 rounded-full text-xs md:text-sm font-bold tracking-[0.2em] uppercase mb-8 border border-amber-400/30 shadow-[0_0_20px_rgba(251,191,36,0.1)]">
-            <Sparkles className="w-4 h-4" /> Balatonederics
-          </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl tracking-tight leading-tight">
+        <div className="relative h-full max-w-[1400px] mx-auto px-4 flex flex-col items-center justify-center text-center">
+          <h1 className="text-4xl md:text-7xl font-extrabold text-white mb-4 drop-shadow-xl tracking-tight px-2">
             {t.info.hero_title}
           </h1>
-          <p className="text-lg md:text-2xl text-stone-200 max-w-2xl mx-auto font-light leading-relaxed mb-12 drop-shadow-md">
+          <p className="text-lg md:text-3xl text-white/90 max-w-3xl mx-auto font-light leading-relaxed mb-8 drop-shadow-md px-4">
             {t.info.hero_subtitle}
           </p>
-          <div className="hidden md:block">
-            <Link href="/info">
-              <Button size="lg" className="h-16 px-12 text-lg font-bold bg-amber-500 text-slate-900 hover:bg-amber-400 rounded-full shadow-[0_10px_40px_rgba(245,158,11,0.4)] transition-all hover:-translate-y-1 group flex items-center gap-3">
-                {t.hero.cta} <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-              </Button>
-            </Link>
-          </div>
+          <Link href="/info">
+            <Button size="lg" className="h-12 md:h-14 px-8 md:px-10 text-base md:text-lg font-bold bg-white text-blue-900 hover:bg-blue-50 rounded-full shadow-xl border-2 md:border-4 border-white/30">
+              {t.hero.cta}
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* TARTALMI RÉSZ - Negatív marginnal "rácsúszik" a Hero képre */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 -mt-32 md:-mt-40">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-12 py-8 md:py-12">
         
-        {/* 2. BEMUTATKOZÁS (Kiemelt átfedéses kártya) */}
-        <section className="mb-24 bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-16 shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-stone-100">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  {t.info.intro_title}
-                </h2>
-                <div className="w-20 h-1.5 bg-amber-500 mx-auto lg:mx-0 rounded-full"></div>
+        {/* 2. BEMUTATKOZÁS */}
+        <section className="mb-16 md:mb-24">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="order-2 md:order-1 space-y-4 md:space-y-6 text-center md:text-left">
+              <div className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm font-bold tracking-wide uppercase">
+                Balatonederics
               </div>
-              <div className="space-y-6 text-base md:text-lg text-slate-500 leading-relaxed font-medium">
+              <h2 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight">
+                {t.info.intro_title}
+              </h2>
+              <div className="space-y-4 text-base md:text-lg text-slate-600 leading-relaxed">
                 <p>{t.info.intro_p1}</p>
                 <p>{t.info.intro_p2}</p>
               </div>
             </div>
 
+            {/* FŐ KÉP - Javítva, hogy érintésre nyíljon */}
             <div 
-              className="relative group cursor-pointer order-1 lg:order-2" 
+              className="order-1 md:order-2 relative group cursor-pointer active:scale-95 transition-transform" 
               onClick={() => {
                 const idx = ALL_IMAGES.findIndex(img => img.src === "/images/haz.webp");
                 openLightbox(idx !== -1 ? idx : 0);
               }}
             >
-               {/* Dekoratív arany háttér */}
-               <div className="absolute -inset-4 bg-amber-500/10 rounded-[2.5rem] md:rounded-[3rem] rotate-3 transition-transform group-hover:rotate-6"></div>
-               <div className="relative h-[350px] md:h-[500px] w-full rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
-                 <Image 
-                  src="/images/haz.webp" 
-                  alt="A ház kívülről" 
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-500"></div>
-               </div>
+               <div className="absolute inset-0 bg-blue-600 rounded-2xl md:rounded-3xl rotate-2 md:rotate-3 opacity-10"></div>
+               <img 
+                src="/images/haz.webp" 
+                alt="A ház kívülről" 
+                className="relative w-full h-[250px] md:h-[400px] object-cover rounded-2xl md:rounded-3xl shadow-2xl"
+              />
             </div>
           </div>
         </section>
 
-        {/* 3. FELSZERELTSÉG (Prémium ikonokkal) */}
-        <section className="mb-32">
-          <div className="text-center mb-16">
-             <h3 className="text-sm font-bold text-amber-500 tracking-[0.2em] uppercase mb-3">Kényelem felsőfokon</h3>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900">Mivel várjuk?</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+        {/* 3. FELSZERELTSÉG */}
+        <section className="mb-16 md:mb-24">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <FeatureCard icon={<Wifi />} title={t.info.features.wifi_t} text={t.info.features.wifi_d} />
             <FeatureCard icon={<Car />} title={t.info.features.parking_t} text={t.info.features.parking_d} />
             <FeatureCard icon={<Wind />} title={t.info.features.ac_t} text={t.info.features.ac_d} />
@@ -160,16 +144,13 @@ export default function InfoPage() {
           </div>
         </section>
 
-        {/* 4. GALÉRIA (Elegáns elválasztókkal) */}
-        <section className="mb-32">
-          <div className="mb-20">
-            <div className="flex items-center gap-6 mb-10">
-              <h4 className="text-2xl md:text-3xl font-extrabold text-slate-900 whitespace-nowrap">
-                {t.info.gallery_inside}
-              </h4>
-              <div className="h-[1px] w-full bg-stone-200"></div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+        {/* 4. GALÉRIA - Pontos indexelés a megnyitáshoz */}
+        <section className="mb-16 md:mb-24">
+          <div className="mb-12 md:mb-16">
+            <h4 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+              <span className="w-8 h-[2px] bg-blue-600"></span> {t.info.gallery_inside}
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {INTERIOR_IMAGES.map((img, idx) => (
                 <Photo key={idx} src={img.src} label={img.label} onClick={() => openLightbox(idx)} />
               ))}
@@ -177,13 +158,10 @@ export default function InfoPage() {
           </div>
 
           <div>
-            <div className="flex items-center gap-6 mb-10">
-              <h4 className="text-2xl md:text-3xl font-extrabold text-slate-900 whitespace-nowrap">
-                {t.info.gallery_outside}
-              </h4>
-              <div className="h-[1px] w-full bg-stone-200"></div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+            <h4 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+              <span className="w-8 h-[2px] bg-green-500"></span> {t.info.gallery_outside}
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {EXTERIOR_IMAGES.map((img, idx) => (
                 <Photo key={idx} src={img.src} label={img.label} onClick={() => openLightbox(INTERIOR_IMAGES.length + idx)} />
               ))}
@@ -191,31 +169,25 @@ export default function InfoPage() {
           </div>
         </section>
 
-        {/* 5. TÉRKÉP ÉS KAPCSOLAT (Mélykék és Arany luxus design) */}
-        <section className="bg-slate-900 rounded-[2rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl relative">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] transform translate-x-1/3 -translate-y-1/3"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] transform -translate-x-1/3 translate-y-1/3"></div>
-          
-          <div className="grid lg:grid-cols-2 relative z-10">
-            <div className="p-10 md:p-16 lg:p-20 flex flex-col justify-center">
-              <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">{t.info.hero_title}</h3>
-              <p className="text-amber-400 font-medium tracking-widest uppercase text-sm mb-12">Foglaljon közvetlenül nálunk</p>
-              
-              <div className="space-y-8">
+        {/* 5. TÉRKÉP ÉS KAPCSOLAT */}
+        <section className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden mb-12">
+          <div className="grid lg:grid-cols-2">
+            <div className="p-6 md:p-12 lg:p-16 flex flex-col justify-center">
+              <h3 className="text-2xl md:text-4xl font-extrabold text-blue-900 mb-6">{t.info.hero_title}</h3>
+              <div className="space-y-4">
                   <ContactInfo icon={<MapPin />} label="Címünk" value={t.info.address} />
                   <ContactInfo icon={<Phone />} label="Telefonszám" value="+36 30 360 5915" isLink href="tel:+36303605915" />
-                  <ContactInfo icon={<Calendar />} label="Nyitvatartás" value="Egész évben várjuk" />
+                  <ContactInfo icon={<Calendar />} label="Nyitvatartás" value="Egész évben" />
               </div>
-              
-              <div className="mt-14 hidden md:block">
+              <div className="mt-8">
                 <Link href="/info">
-                  <Button className="w-full h-16 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-2xl shadow-[0_10px_30px_rgba(245,158,11,0.3)] transition-transform hover:-translate-y-1 text-lg">
+                  <Button className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-all">
                     {t.info.book_btn}
                   </Button>
                 </Link>
               </div>
             </div>
-            <div className="h-[350px] lg:h-auto min-h-[500px] w-full relative">
+           <div className="h-[400px] lg:h-auto min-h-[400px] w-full relative">
                <iframe 
                 width="100%" 
                 height="100%" 
@@ -225,105 +197,77 @@ export default function InfoPage() {
                 allowFullScreen={true} 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
-                className="md:grayscale-[80%] md:opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700 object-cover"
+                className="grayscale-[20%] hover:grayscale-0 transition-all duration-700"
               ></iframe>
             </div>
           </div>
         </section>
       </div>
 
-      {/* --- MOBIL STICKY FOGLALÁS GOMB (Prémium kinézet) --- */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full p-4 bg-white/95 backdrop-blur-xl z-[90] border-t border-stone-200 shadow-[0_-20px_40px_rgba(0,0,0,0.08)]">
-         <Link href="/info" className="block w-full">
-            <Button className="w-full h-14 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl shadow-lg font-bold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95">
-              {t.info.book_btn} <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-      </div>
-
-      {/* --- LIGHTBOX ELŐTÖLTÉSSEL --- */}
+      {/* --- LIGHTBOX - Javított mobil navigáció --- */}
       {selectedImageIndex !== null && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/98 flex flex-col items-center justify-center backdrop-blur-xl" onClick={closeLightbox}>
-          <button className="absolute top-4 right-4 md:top-8 md:right-8 text-white/50 hover:text-white p-3 z-[110] transition-colors">
-            <X className="w-8 h-8 md:w-10 md:h-10" />
+        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center backdrop-blur-md" onClick={closeLightbox}>
+          <button className="absolute top-4 right-4 text-white p-3 bg-white/10 rounded-full z-[110]">
+            <X className="w-8 h-8" />
           </button>
 
-          <button onClick={prevImage} className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-amber-400 transition-all z-50 backdrop-blur-sm">
-            <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
-          </button>
+          <div className="relative w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {/* Előző kép gomb - Mobilon is látható de szolidabb */}
+            <button onClick={prevImage} className="absolute left-2 md:left-4 p-3 text-white/50 hover:text-white transition-all z-50">
+              <ChevronLeft className="w-10 h-10 md:w-16 md:h-16" />
+            </button>
 
-          <button onClick={nextImage} className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-amber-400 transition-all z-50 backdrop-blur-sm">
-            <ChevronRight className="w-8 h-8 md:w-12 md:h-12" />
-          </button>
+            <img 
+              src={ALL_IMAGES[selectedImageIndex].src} 
+              alt="Nagyított kép" 
+              className="max-w-[98vw] max-h-[70vh] md:max-h-[85vh] object-contain shadow-2xl"
+              onClick={nextImage} // Képre kattintva is továbblép (kényelmes mobilon)
+            />
 
-          <div className="relative w-full h-full flex flex-col items-center justify-center cursor-default" onClick={(e) => e.stopPropagation()}>
-            
-            <div className="relative w-full h-[75vh] md:h-[85vh] max-w-6xl mx-auto cursor-pointer" onClick={nextImage}>
-               <Image 
-                src={ALL_IMAGES[selectedImageIndex].src} 
-                alt={ALL_IMAGES[selectedImageIndex].label} 
-                fill
-                priority
-                className="object-contain drop-shadow-2xl"
-              />
+            <div className="mt-4 text-center px-4">
+              <p className="text-white text-lg md:text-2xl font-medium">{ALL_IMAGES[selectedImageIndex].label}</p>
+              <p className="text-white/40 text-sm">{selectedImageIndex + 1} / {ALL_IMAGES.length}</p>
             </div>
 
-            <div className="hidden">
-              <Image src={ALL_IMAGES[(selectedImageIndex + 1) % ALL_IMAGES.length].src} alt="next" fill priority />
-              <Image src={ALL_IMAGES[(selectedImageIndex - 1 + ALL_IMAGES.length) % ALL_IMAGES.length].src} alt="prev" fill priority />
-            </div>
-
-            <div className="absolute bottom-8 md:bottom-12 text-center flex flex-col items-center">
-              <p className="text-white text-lg md:text-2xl font-bold tracking-wide">{ALL_IMAGES[selectedImageIndex].label}</p>
-              <div className="w-12 h-1 bg-amber-500 rounded-full mt-3 mb-2"></div>
-              <p className="text-white/40 text-sm font-medium tracking-widest">{selectedImageIndex + 1} / {ALL_IMAGES.length}</p>
-            </div>
+            {/* Következő kép gomb */}
+            <button onClick={nextImage} className="absolute right-2 md:right-4 p-3 text-white/50 hover:text-white transition-all z-50">
+              <ChevronRight className="w-10 h-10 md:w-16 md:h-16" />
+            </button>
           </div>
         </div>
       )}
-      
-      {/* GLOBAL ANIMATION */}
-      <style jsx global>{`
-        @keyframes slow-zoom {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.1); }
-        }
-        .animate-slow-zoom {
-          animation: slow-zoom 20s infinite alternate linear;
-        }
-      `}</style>
     </main>
   );
 }
 
 // --- SEGÉDKOMPONENSEK ---
 
-function ContactInfo({ icon, label, value, isLink, href }: { icon: React.ReactNode, label: string, value: string, isLink?: boolean, href?: string }) {
+function ContactInfo({ icon, label, value, isLink, href }: any) {
   return (
-    <div className="flex items-center gap-5 group">
-      <div className="w-14 h-14 rounded-2xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-slate-900 transition-all duration-300 shrink-0 shadow-lg">
+    <div className="flex items-start gap-3 md:gap-4">
+      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
         {icon}
       </div>
       <div>
-        <p className="font-bold text-slate-400 text-xs uppercase tracking-widest mb-1">{label}</p>
+        <p className="font-bold text-slate-900 text-sm md:text-base">{label}</p>
         {isLink ? (
-          <a href={href} className="text-white font-extrabold text-lg md:text-xl hover:text-amber-400 transition-colors">{value}</a>
+          <a href={href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm md:text-base">{value}</a>
         ) : (
-          <p className="text-white font-extrabold text-lg md:text-xl">{value}</p>
+          <p className="text-slate-600 text-sm md:text-base">{value}</p>
         )}
       </div>
     </div>
   );
 }
 
-function FeatureCard({ icon, title, text }: { icon: React.ReactNode, title: string, text: string }) {
+function FeatureCard({ icon, title, text }: { icon: any, title: string, text: string }) {
   return (
-    <div className="bg-white p-6 md:p-8 rounded-[1.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-stone-100 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-500 text-center flex flex-col items-center group">
-      <div className="mb-5 text-amber-600 bg-amber-50 h-16 w-16 p-4 rounded-2xl group-hover:bg-amber-500 group-hover:text-white group-hover:scale-110 transition-all duration-500 shadow-inner">
+    <div className="bg-white p-4 md:p-8 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 text-center md:text-left flex flex-col items-center md:items-start">
+      <div className="mb-4 text-blue-600 h-10 w-10 md:h-12 md:w-12 [&>svg]:w-full [&>svg]:h-full bg-blue-50 p-2 rounded-xl">
         {icon}
       </div>
-      <h4 className="font-extrabold text-slate-900 mb-2 text-sm md:text-lg">{title}</h4>
-      <span className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">{text}</span>
+      <h4 className="font-bold text-slate-900 mb-1 text-sm md:text-lg">{title}</h4>
+      <span className="text-[11px] md:text-sm text-slate-500 font-medium leading-tight">{text}</span>
     </div>
   );
 }
@@ -332,17 +276,17 @@ function Photo({ src, label, onClick }: { src: string, label: string, onClick?: 
   return (
     <div 
       onClick={onClick}
-      className="relative overflow-hidden rounded-[1.5rem] cursor-pointer aspect-[4/3] shadow-md hover:shadow-2xl active:scale-95 transition-all duration-500 group"
+      className="relative overflow-hidden rounded-xl md:rounded-2xl cursor-pointer aspect-[4/3] shadow-md active:scale-95 transition-transform"
     >
-      <Image 
+      <img 
         src={src} 
         alt={label} 
-        fill
-        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+        className="w-full h-full object-cover"
+        loading="lazy"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-70 md:opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5 md:p-6 pointer-events-none">
-        <div className="w-8 h-1 bg-amber-500 rounded-full mb-3 translate-y-4 md:translate-y-8 group-hover:translate-y-0 transition-transform duration-500"></div>
-        <span className="text-white font-extrabold text-sm md:text-xl drop-shadow-md translate-y-4 md:translate-y-8 group-hover:translate-y-0 transition-transform duration-500 delay-75">{label}</span>
+      {/* Mobilon is látható legyen a felirat, de ne takarja a kattintást */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-3 md:p-6 pointer-events-none">
+        <span className="text-white font-bold text-xs md:text-lg">{label}</span>
       </div>
     </div>
   );
