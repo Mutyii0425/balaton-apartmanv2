@@ -10,7 +10,6 @@ export default function InfoPage() {
   const { t } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
-  // ... (A képek tömbjei és a Lightbox logikája változatlan) ...
   const INTERIOR_IMAGES = [
     { src: "/images/balhalo.jpg", label: t.info.img_labels.bedroom },
     { src: "/images/balhalo1.jpg", label: t.info.img_labels.living },
@@ -63,8 +62,8 @@ export default function InfoPage() {
   }, [selectedImageIndex, nextImage, prevImage]);
 
   return (
-    {/* Meleg bézs/krémszínű háttér a hideg szürke helyett */}
     <main className="min-h-screen bg-[#FCF9F5] selection:bg-orange-200">
+      {/* Meleg bézs/krémszínű háttér a hideg szürke helyett */}
       
       {/* 1. HERO SZEKCIÓ */}
       <div className="relative h-[75vh] md:h-[85vh] w-full overflow-hidden">
