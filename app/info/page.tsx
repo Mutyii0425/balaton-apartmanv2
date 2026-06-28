@@ -216,47 +216,50 @@ export default function BookingPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50/50 p-4 pt-32">
-        <Card className="w-full max-w-md text-center p-8 border-green-500 border-2 shadow-2xl rounded-3xl bg-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#FDF8F1] p-4 pt-32 font-sans text-[#5C3D2E]">
+        <Card className="w-full max-w-md text-center p-8 border-[6px] border-[#E0F2E9] shadow-2xl rounded-[2.5rem] bg-white">
           <div className="flex justify-center mb-6">
-            <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-12 w-12 text-green-600" />
+            <div className="h-24 w-24 bg-[#E0F2E9] rounded-[1.5rem] flex items-center justify-center rotate-3">
+                <CheckCircle className="h-12 w-12 text-[#3A7056] -rotate-3" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-green-700 mb-2">{t.booking.success_title}</CardTitle>
-          <p className="text-gray-500 mb-8">{t.booking.success_msg}</p>
+          <CardTitle className="text-3xl font-extrabold text-[#3A7056] mb-2">{t.booking.success_title}</CardTitle>
+          <p className="text-[#7A5B49] font-medium mb-8">{t.booking.success_msg}</p>
           
-          <div className="bg-gray-50 p-6 rounded-2xl mb-8 text-left border border-gray-100 shadow-inner">
-            <p className="font-bold text-gray-900 uppercase tracking-wide text-xs mb-3">{t.booking.details}</p>
-            <ul className="text-gray-700 space-y-2 text-sm">
-              <li className="flex justify-between"><span>Vendégek:</span> <span className="font-medium">{adults} {t.booking.adults}, {children} {t.booking.children}</span></li>
-              {nights === 1 && <li className="flex justify-between text-amber-600 font-bold"><span>Extra:</span> <span>+20% (1 éjszakás felár)</span></li>}
-              {hasDog && <li className="flex justify-between text-blue-600"><span>Extra:</span> <span className="font-medium">🐶 {t.booking.dog}</span></li>}
-              {needsClimate && <li className="flex justify-between text-blue-400"><span>Extra:</span> <span className="font-medium">❄️ Klíma (+2000Ft/éj)</span></li>}
+          <div className="bg-[#FDF8F1] p-6 rounded-[2rem] mb-8 text-left border border-black/5 shadow-inner">
+            <p className="font-bold text-[#5C3D2E] uppercase tracking-wider text-xs mb-4">{t.booking.details}</p>
+            <ul className="text-[#7A5B49] space-y-3 text-sm font-medium">
+              <li className="flex justify-between items-center">
+                <span>Vendégek:</span> 
+                <span className="font-bold text-[#5C3D2E] bg-white px-3 py-1 rounded-full shadow-sm">{adults} {t.booking.adults}, {children} {t.booking.children}</span>
+              </li>
+              {nights === 1 && <li className="flex justify-between items-center text-[#964B33]"><span>Extra:</span> <span className="font-bold bg-[#FFDFD3] px-3 py-1 rounded-full shadow-sm">+20% (1 éjszakás felár)</span></li>}
+              {hasDog && <li className="flex justify-between items-center"><span>Extra:</span> <span className="font-bold text-[#964B33] bg-[#FFDFD3] px-3 py-1 rounded-full shadow-sm">🐶 {t.booking.dog}</span></li>}
+              {needsClimate && <li className="flex justify-between items-center"><span>Extra:</span> <span className="font-bold text-[#3C6E79] bg-[#D6EAEF] px-3 py-1 rounded-full shadow-sm">❄️ Klíma</span></li>}
               
-              <li className="flex justify-between text-slate-500 italic">
+              <li className="flex justify-between items-center text-[#A67B5B] italic pt-2">
                 <span>Idegenforgalmi adó (helyszínen):</span>
                 <span>{(adults * nights * 500).toLocaleString('hu-HU')} Ft</span>
               </li>
 
-              <li className="flex justify-between border-t pt-2 mt-2">
+              <li className="flex justify-between items-center border-t border-[#E8DFF5] pt-4 mt-2">
                 <span>Fizetési mód:</span>
-                <span className="font-medium capitalize text-slate-900">
+                <span className="font-bold capitalize text-[#5C3D2E] bg-white px-3 py-1 rounded-full shadow-sm">
                   {paymentMethod === 'cash' ? 'Készpénz' : paymentMethod === 'card' ? 'Bankkártya' : 'SZÉP Kártya'}
                 </span>
               </li>
 
-              <li className="flex justify-between border-t pt-2 mt-2 text-lg font-bold text-blue-900">
+              <li className="flex justify-between items-center border-t border-[#E8DFF5] pt-4 mt-2 text-lg font-extrabold text-[#5C3D2E]">
                 <span>Szállásdíj:</span>
                 <span>{totalPrice.toLocaleString('hu-HU')} Ft</span>
               </li>
             </ul>
-            <p className="text-[10px] text-slate-400 mt-2 text-center">
+            <p className="text-[10px] text-[#A67B5B] mt-4 text-center">
               * Az IFA (500 Ft/fő/éj) 18 év felett fizetendő a helyszínen.
             </p>
           </div>
           
-          <Button onClick={() => window.location.reload()} variant="outline" className="w-full h-12 rounded-xl border-2 border-green-600 text-green-700 hover:bg-green-50 font-bold">
+          <Button onClick={() => window.location.reload()} variant="outline" className="w-full h-14 rounded-2xl border-4 border-[#E0F2E9] text-[#3A7056] hover:bg-[#E0F2E9] font-bold text-base transition-all">
             {t.booking.back_to_calendar}
           </Button>
         </Card>
@@ -265,36 +268,40 @@ export default function BookingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50/50 pt-28 pb-12 px-4 md:px-8">
-      <div className="max-w-[1200px] mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">{t.booking.title}</h1>
-          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light">{t.booking.subtitle}</p>
+    <main className="min-h-screen bg-[#FDF8F1] selection:bg-[#FCE8B2] pt-28 pb-20 px-4 md:px-8 font-sans text-[#5C3D2E]">
+      <div className="max-w-[1300px] mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-[#5C3D2E] mb-6 tracking-tight drop-shadow-sm">{t.booking.title}</h1>
+          <p className="text-lg md:text-xl text-[#7A5B49] max-w-2xl mx-auto font-medium">{t.booking.subtitle}</p>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
-          <Card className="xl:col-span-2 shadow-xl border-gray-100 rounded-[2rem] overflow-hidden bg-white">
-            <CardHeader className="bg-blue-50/50 border-b border-blue-50 p-6 md:p-8">
-              <div className="flex items-center gap-4 mb-2">
-                 <div className="p-3 bg-blue-100 rounded-xl text-blue-600"><CalendarDays size={28} /></div>
-                 <CardTitle className="text-2xl md:text-3xl text-blue-900 font-bold">{t.booking.calendar}</CardTitle>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start">
+          
+          {/* NAPTÁR KÁRTYA */}
+          <Card className="xl:col-span-2 shadow-xl border-[8px] border-white rounded-[3rem] overflow-hidden bg-white">
+            <CardHeader className="bg-[#FFDFD3] border-b-0 p-6 md:p-10 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center gap-4 mb-2">
+                 <div className="p-4 bg-white/60 backdrop-blur-sm rounded-[1.5rem] text-[#964B33] shadow-sm rotate-3 hover:rotate-0 transition-transform"><CalendarDays size={32} /></div>
+                 <div>
+                    <CardTitle className="text-3xl md:text-4xl text-[#964B33] font-extrabold tracking-tight">{t.booking.calendar}</CardTitle>
+                    <CardDescription className="text-[#964B33]/80 font-bold text-base md:text-lg mt-1">
+                      {adults + children >= 4 
+                        ? (language === 'hu' ? "Nagyobb társaság esetén mindkét apartmanra szükség van." : "Both apartments needed for larger groups.") 
+                        : (language === 'hu' ? "Kisebb létszámnál elég az egyik apartman." : "One apartment is enough for smaller groups.")}
+                    </CardDescription>
+                 </div>
               </div>
-              <CardDescription className="text-blue-700/80 font-medium text-base md:text-lg pl-1">
-                {adults + children >= 4 
-                  ? (language === 'hu' ? "Nagyobb társaság esetén mindkét apartmanra szükség van." : "Both apartments needed for larger groups.") 
-                  : (language === 'hu' ? "Kisebb létszámnál elég az egyik apartman." : "One apartment is enough for smaller groups.")}
-              </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 md:p-8">
+            <CardContent className="p-6 md:p-10">
               {date?.from && isWithinInterval(date.from, { 
                 start: new Date(new Date().getFullYear(), 6, 1), 
                 end: new Date(new Date().getFullYear(), 7, 31) 
               }) && (
-                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
-                    <CalendarDays size={20} />
+                <div className="mb-8 p-5 bg-[#FCE8B2] border-none rounded-[2rem] flex items-center gap-4 animate-in fade-in slide-in-from-top-2 shadow-sm">
+                  <div className="bg-white/60 p-3 rounded-2xl text-[#8C6D1F]">
+                    <CalendarDays size={24} />
                   </div>
-                  <p className="text-sm font-semibold text-amber-900 leading-tight">
+                  <p className="text-base font-bold text-[#8C6D1F] leading-snug">
                     {language === 'hu' 
                       ? "Főszezoni időszak (július-augusztus): Ebben az időszakban legalább 4 éjszaka foglalható." 
                       : "High season (July-August): Minimum 4 nights required."}
@@ -303,24 +310,24 @@ export default function BookingPage() {
               )}
 
               <div className="relative group">
-                <div className="absolute top-5 left-0 right-0 flex justify-between px-4 z-50 pointer-events-none">
+                <div className="absolute top-5 left-0 right-0 flex justify-between px-2 md:px-6 z-50 pointer-events-none">
                   <Button 
                     type="button" variant="outline" size="icon" 
-                    className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
+                    className="h-12 w-12 rounded-full bg-white shadow-lg pointer-events-auto hover:bg-[#FFDFD3] hover:text-[#964B33] border-none transition-transform hover:scale-110"
                     onClick={prevMonth}
                   >
-                    <ChevronLeft className="h-5 w-5 text-slate-600" />
+                    <ChevronLeft className="h-6 w-6" />
                   </Button>
                   <Button 
                     type="button" variant="outline" size="icon" 
-                    className="h-9 w-9 rounded-full bg-white shadow-md pointer-events-auto hover:bg-blue-50 border-gray-200"
+                    className="h-12 w-12 rounded-full bg-white shadow-lg pointer-events-auto hover:bg-[#FFDFD3] hover:text-[#964B33] border-none transition-transform hover:scale-110"
                     onClick={nextMonth}
                   >
-                    <ChevronRight className="h-5 w-5 text-slate-600" />
+                    <ChevronRight className="h-6 w-6" />
                   </Button>
                 </div>
 
-                <div className="flex justify-center mb-8 w-full overflow-x-auto pb-4">
+                <div className="flex justify-center mb-10 w-full overflow-x-auto pb-4">
                   <Calendar
                     key={month.toISOString()} 
                     mode="range"
@@ -330,80 +337,80 @@ export default function BookingPage() {
                     onMonthChange={setMonth}
                     locale={localeMap[language as keyof typeof localeMap]} 
                     numberOfMonths={2}
-                    className="rounded-xl border border-gray-100 p-4 shadow-sm relative bg-white"
+                    className="rounded-3xl border-none p-0 md:p-4 relative bg-white"
                     disabled={[{ before: new Date() }, ...bookedDates]}
                     modifiers={{ booked: bookedDates, pending: pendingDates }}
                     modifiersClassNames={{
-                      booked: "bg-red-50 text-red-300 line-through decoration-red-300 opacity-60 cursor-not-allowed",
-                      pending: "bg-orange-100 text-orange-600 font-bold"
+                      booked: "bg-red-50 text-red-300 line-through decoration-red-300 opacity-60 cursor-not-allowed rounded-xl",
+                      pending: "bg-[#FCE8B2] text-[#8C6D1F] font-bold rounded-xl"
                     }}
                     classNames={{
-                      months: "flex flex-col md:flex-row space-y-4 md:space-x-8 md:space-y-0 justify-center",
+                      months: "flex flex-col md:flex-row space-y-6 md:space-x-12 md:space-y-0 justify-center",
                       month: "space-y-4", 
-                      caption: "flex justify-center pt-1 relative items-center mb-4",
-                      caption_label: "text-lg font-bold text-slate-800",
+                      caption: "flex justify-center pt-2 relative items-center mb-6",
+                      caption_label: "text-2xl font-extrabold text-[#5C3D2E] capitalize",
                       nav: "hidden", 
-                      table: "w-full border-collapse space-y-1",
-                      head_row: "flex",
-                      head_cell: "text-slate-400 rounded-md w-10 font-normal text-[0.8rem] flex justify-center items-center h-10",
-                      row: "flex w-full mt-2",
-                      cell: "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                      day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-slate-100 rounded-md transition-colors flex items-center justify-center",
-                      day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-700 focus:text-white shadow-md",
-                      day_today: "bg-slate-100 text-slate-900 font-bold ring-1 ring-slate-300",
-                      day_outside: "text-slate-300 opacity-50",
-                      day_disabled: "text-slate-300 opacity-50",
-                      day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-blue-900",
+                      table: "w-full border-collapse space-y-2",
+                      head_row: "flex mb-2",
+                      head_cell: "text-[#A67B5B] rounded-md w-12 font-bold text-sm flex justify-center items-center h-12 uppercase",
+                      row: "flex w-full mt-2 gap-1",
+                      cell: "h-12 w-12 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                      day: "h-12 w-12 p-0 font-bold text-base text-[#5C3D2E] aria-selected:opacity-100 hover:bg-[#FDF8F1] rounded-2xl transition-all flex items-center justify-center",
+                      day_selected: "bg-[#E87A5D] text-white hover:bg-[#D96C4A] hover:text-white focus:bg-[#E87A5D] focus:text-white shadow-md scale-105",
+                      day_today: "bg-[#FDF8F1] text-[#E87A5D] font-extrabold ring-4 ring-[#FFDFD3]",
+                      day_outside: "text-[#D0C0B5] opacity-50",
+                      day_disabled: "text-[#D0C0B5] opacity-50",
+                      day_range_middle: "aria-selected:bg-[#FFDFD3] aria-selected:text-[#964B33] scale-100 rounded-none",
                       day_hidden: "invisible",
                     }}
                   />
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-4 md:p-6 text-center border border-slate-100">
-                 <p className="text-lg md:text-xl text-slate-700 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
+              {/* Kijelölt dátum megjelenítő */}
+              <div className="bg-[#FDF8F1] rounded-[2rem] p-6 text-center border-4 border-[#FFDFD3]/30 shadow-inner">
+                 <p className="text-xl md:text-2xl text-[#5C3D2E] flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 font-medium">
                     {date?.from ? (
                       date.to ? (
                         <>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-blue-600">{format(date.from, 'yyyy. MM. dd.')}</span> 
-                            <span className="text-gray-300 hidden md:inline">|</span>
-                            <span className="font-bold text-blue-600">{format(date.to, 'yyyy. MM. dd.')}</span>
+                          <div className="flex items-center gap-3 bg-white px-5 py-2 rounded-full shadow-sm">
+                            <span className="font-extrabold text-[#E87A5D]">{format(date.from, 'yyyy. MM. dd.')}</span> 
+                            <span className="text-[#D0C0B5] hidden md:inline">-</span>
+                            <span className="font-extrabold text-[#E87A5D]">{format(date.to, 'yyyy. MM. dd.')}</span>
                           </div>
-                          <span className="bg-blue-100 text-blue-800 text-sm py-1.5 px-4 rounded-full font-bold uppercase tracking-wide">
+                          <span className="bg-[#E87A5D] text-white text-sm py-2 px-6 rounded-full font-bold uppercase tracking-wider shadow-md">
                             {nights} {t.booking.night}
                           </span>
                         </>
                       ) : (t.booking.select_end_date)
                     ) : (
-                        <span className="text-gray-400 italic font-medium">{t.booking.select_dates}</span>
+                        <span className="text-[#A67B5B] italic font-semibold">{t.booking.select_dates}</span>
                     )}
                  </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-2xl border-t-8 border-t-blue-600 rounded-[2rem] bg-white h-fit sticky top-24 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-2"></div>
-            <CardHeader className="pb-6 pt-8 px-6 md:px-8">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-yellow-100 rounded-xl text-yellow-600 shadow-sm"><Calculator size={28} /></div>
-                    <CardTitle className="text-2xl font-bold text-slate-800">{t.booking.calc_title}</CardTitle>
+          {/* ŰRLAP ÉS ÁRKALKULÁTOR KÁRTYA */}
+          <Card className="shadow-2xl border-[8px] border-white rounded-[3rem] bg-[#FDF8F1] h-fit sticky top-24 overflow-hidden">
+            <CardHeader className="bg-[#FCE8B2] pb-8 pt-10 px-6 md:px-10 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-4">
+                    <div className="p-4 bg-white/60 backdrop-blur-sm rounded-[1.5rem] text-[#8C6D1F] shadow-sm -rotate-3 hover:rotate-0 transition-transform"><Calculator size={32} /></div>
+                    <CardTitle className="text-3xl font-extrabold text-[#8C6D1F]">{t.booking.calc_title}</CardTitle>
                 </div>
             </CardHeader>
-            <CardContent className="px-6 md:px-8 pb-8">
+            <CardContent className="px-6 md:px-10 pb-10 pt-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 
-                {/* VENDÉGEK SZEKCIÓ JAVÍTVA */}
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-5">
-                  <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
-                     <Users size={20} className="text-blue-500" /> Vendégek
+                {/* VENDÉGEK SZEKCIÓ */}
+                <div className="bg-white rounded-[2rem] p-6 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 text-[#5C3D2E] font-extrabold text-lg">
+                     <div className="p-2 bg-[#D6EAEF] rounded-xl text-[#3C6E79]"><Users size={20} /></div> Vendégek
                   </div>
                   
-                  {/* items-end biztosítja, hogy az inputok alja egy vonalban legyen */}
                   <div className="flex flex-row gap-4 items-end">
-                    <div className="flex-1 space-y-2">
-                      <Label htmlFor="adults" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block min-h-[35px]">
+                    <div className="flex-1 space-y-3">
+                      <Label htmlFor="adults" className="text-xs font-bold uppercase text-[#A67B5B] tracking-widest block">
                         {t.booking.adults}
                       </Label>
                       <Input 
@@ -411,105 +418,110 @@ export default function BookingPage() {
                         value={adults} 
                         onFocus={handleInputFocus}
                         onChange={(e) => setAdults(e.target.value === '' ? 0 : Number(e.target.value))}
-                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center w-full"
+                        className="bg-[#FDF8F1] h-14 text-2xl font-extrabold border-none rounded-2xl text-center w-full text-[#5C3D2E] focus:ring-4 focus:ring-[#FFDFD3] transition-all"
                       />
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <Label htmlFor="children" className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block min-h-[35px] leading-tight">
-                        {t.booking.children} <span className="lowercase font-normal opacity-70">(2-14 év)</span>
+                    <div className="flex-1 space-y-3">
+                      <Label htmlFor="children" className="text-xs font-bold uppercase text-[#A67B5B] tracking-widest block leading-tight">
+                        {t.booking.children} <span className="lowercase font-semibold opacity-70 block text-[10px]">(2-14 év)</span>
                       </Label>
                       <Input 
                         type="number" min={0} max={5} 
                         value={children} 
                         onFocus={handleInputFocus}
                         onChange={(e) => setChildren(e.target.value === '' ? 0 : Number(e.target.value))}
-                        className="bg-white h-12 text-xl font-bold border-gray-200 rounded-xl text-center w-full"
+                        className="bg-[#FDF8F1] h-14 text-2xl font-extrabold border-none rounded-2xl text-center w-full text-[#5C3D2E] focus:ring-4 focus:ring-[#FFDFD3] transition-all"
                       />
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-3 pt-5 border-t border-slate-200">
-                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
-                        <div className="flex items-center gap-3">
-                           <div className="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform"><Dog size={18} /></div>
-                           <span className="font-semibold text-slate-700">{t.booking.dog}</span>
+                  {/* Extrák kapcsolói - Pasztell kártyás stílus */}
+                  <div className="flex flex-col gap-3 pt-6 border-t border-[#FDF8F1]">
+                      <label className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border-4 ${hasDog ? 'bg-[#FFDFD3] border-[#FFDFD3]' : 'bg-white border-[#FDF8F1] hover:border-[#FFDFD3]'}`}>
+                        <div className="flex items-center gap-4">
+                           <div className={`p-3 rounded-xl transition-transform ${hasDog ? 'bg-white/60 text-[#964B33] scale-110' : 'bg-[#FDF8F1] text-[#A67B5B]'}`}><Dog size={20} /></div>
+                           <span className={`font-extrabold ${hasDog ? 'text-[#964B33]' : 'text-[#7A5B49]'}`}>{t.booking.dog}</span>
                         </div>
-                        <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded cursor-pointer" />
+                        <input type="checkbox" checked={hasDog} onChange={(e) => setHasDog(e.target.checked)} className="w-6 h-6 accent-[#E87A5D] rounded-md cursor-pointer" />
                       </label>
-                      <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-300 transition-all group">
-                        <div className="flex items-center gap-3">
-                           <div className="bg-blue-50 p-2 rounded-lg text-blue-400 group-hover:scale-110 transition-transform"><Wind size={18} /></div>
-                           <span className="font-semibold text-slate-700">Klíma használat (+2000Ft/éj)</span>
+                      <label className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border-4 ${needsClimate ? 'bg-[#D6EAEF] border-[#D6EAEF]' : 'bg-white border-[#FDF8F1] hover:border-[#D6EAEF]'}`}>
+                        <div className="flex items-center gap-4">
+                           <div className={`p-3 rounded-xl transition-transform ${needsClimate ? 'bg-white/60 text-[#3C6E79] scale-110' : 'bg-[#FDF8F1] text-[#A67B5B]'}`}><Wind size={20} /></div>
+                           <span className={`font-extrabold ${needsClimate ? 'text-[#3C6E79]' : 'text-[#7A5B49]'}`}>Klíma (+2000Ft)</span>
                         </div>
-                        <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-5 h-5 accent-blue-400 rounded cursor-pointer" />
+                        <input type="checkbox" checked={needsClimate} onChange={(e) => setNeedsClimate(e.target.checked)} className="w-6 h-6 accent-[#3C6E79] rounded-md cursor-pointer" />
                       </label>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <Label className="text-slate-500 font-medium pl-1">{t.booking.name}</Label>
-                        <Input name="name" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
+                {/* Személyes adatok */}
+                <div className="space-y-5 bg-white p-6 rounded-[2rem] shadow-sm">
+                    <div className="space-y-2">
+                        <Label className="text-[#A67B5B] font-bold text-xs uppercase tracking-widest pl-2">{t.booking.name}</Label>
+                        <Input name="name" required className="h-14 border-none bg-[#FDF8F1] focus:bg-white focus:ring-4 focus:ring-[#FFDFD3] rounded-2xl font-bold text-[#5C3D2E] px-4" />
                     </div>
-                    <div className="space-y-1">
-                        <Label className="text-slate-500 font-medium pl-1">{t.booking.email}</Label>
-                        <Input name="email" type="email" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
+                    <div className="space-y-2">
+                        <Label className="text-[#A67B5B] font-bold text-xs uppercase tracking-widest pl-2">{t.booking.email}</Label>
+                        <Input name="email" type="email" required className="h-14 border-none bg-[#FDF8F1] focus:bg-white focus:ring-4 focus:ring-[#FFDFD3] rounded-2xl font-bold text-[#5C3D2E] px-4" />
                     </div>
-                    <div className="space-y-1">
-                        <Label className="text-slate-500 font-medium pl-1">{t.booking.phone}</Label>
-                        <Input name="phone" required className="h-11 border-gray-200 bg-gray-50 focus:bg-white rounded-xl" />
+                    <div className="space-y-2">
+                        <Label className="text-[#A67B5B] font-bold text-xs uppercase tracking-widest pl-2">{t.booking.phone}</Label>
+                        <Input name="phone" required className="h-14 border-none bg-[#FDF8F1] focus:bg-white focus:ring-4 focus:ring-[#FFDFD3] rounded-2xl font-bold text-[#5C3D2E] px-4" />
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-3">
-                  <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
-                     <Banknote size={20} className="text-green-600" /> Fizetési mód
+                {/* Fizetési Mód */}
+                <div className="bg-white rounded-[2rem] p-6 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3 text-[#5C3D2E] font-extrabold text-lg mb-2">
+                     <div className="p-2 bg-[#E0F2E9] rounded-xl text-[#3A7056]"><Banknote size={20} /></div> Fizetési mód
                   </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    <button type="button" onClick={() => setPaymentMethod('cash')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'cash' ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${paymentMethod === 'cash' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}><Banknote size={20} /></div>
-                        <span className="font-semibold text-slate-700">Készpénz</span>
+                  <div className="grid grid-cols-1 gap-3">
+                    <button type="button" onClick={() => setPaymentMethod('cash')} className={`flex items-center justify-between p-4 rounded-2xl border-4 transition-all ${paymentMethod === 'cash' ? 'bg-[#E0F2E9] border-[#E0F2E9]' : 'bg-white border-[#FDF8F1] hover:border-[#E0F2E9]'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-xl ${paymentMethod === 'cash' ? 'bg-white/60 text-[#3A7056]' : 'bg-[#FDF8F1] text-[#A67B5B]'}`}><Banknote size={20} /></div>
+                        <span className={`font-extrabold ${paymentMethod === 'cash' ? 'text-[#3A7056]' : 'text-[#7A5B49]'}`}>Készpénz</span>
                       </div>
-                      {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-green-600" />}
+                      {paymentMethod === 'cash' && <div className="w-4 h-4 rounded-full bg-[#3A7056] shadow-inner" />}
                     </button>
-                    <button type="button" onClick={() => setPaymentMethod('card')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'card' ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${paymentMethod === 'card' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}><CreditCard size={20} /></div>
-                        <span className="font-semibold text-slate-700">Bankkártya</span>
+                    <button type="button" onClick={() => setPaymentMethod('card')} className={`flex items-center justify-between p-4 rounded-2xl border-4 transition-all ${paymentMethod === 'card' ? 'bg-[#D6EAEF] border-[#D6EAEF]' : 'bg-white border-[#FDF8F1] hover:border-[#D6EAEF]'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-xl ${paymentMethod === 'card' ? 'bg-white/60 text-[#3C6E79]' : 'bg-[#FDF8F1] text-[#A67B5B]'}`}><CreditCard size={20} /></div>
+                        <span className={`font-extrabold ${paymentMethod === 'card' ? 'text-[#3C6E79]' : 'text-[#7A5B49]'}`}>Bankkártya</span>
                       </div>
-                      {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                      {paymentMethod === 'card' && <div className="w-4 h-4 rounded-full bg-[#3C6E79] shadow-inner" />}
                     </button>
-                    <button type="button" onClick={() => setPaymentMethod('szep_card')} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${paymentMethod === 'szep_card' ? 'bg-purple-50 border-purple-300' : 'bg-white border-gray-200'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${paymentMethod === 'szep_card' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}><CreditCard size={20} /></div>
-                        <span className="font-semibold text-slate-700">SZÉP Kártya</span>
+                    <button type="button" onClick={() => setPaymentMethod('szep_card')} className={`flex items-center justify-between p-4 rounded-2xl border-4 transition-all ${paymentMethod === 'szep_card' ? 'bg-[#E8DFF5] border-[#E8DFF5]' : 'bg-white border-[#FDF8F1] hover:border-[#E8DFF5]'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-xl ${paymentMethod === 'szep_card' ? 'bg-white/60 text-[#604987]' : 'bg-[#FDF8F1] text-[#A67B5B]'}`}><CreditCard size={20} /></div>
+                        <span className={`font-extrabold ${paymentMethod === 'szep_card' ? 'text-[#604987]' : 'text-[#7A5B49]'}`}>SZÉP Kártya</span>
                       </div>
-                      {paymentMethod === 'szep_card' && <div className="w-2.5 h-2.5 rounded-full bg-purple-600" />}
+                      {paymentMethod === 'szep_card' && <div className="w-4 h-4 rounded-full bg-[#604987] shadow-inner" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-slate-900 text-white p-6 rounded-2xl flex flex-col gap-2 shadow-xl ring-4 ring-slate-100">
-                  <div className="flex items-center justify-between">
+                {/* Végösszeg */}
+                <div className="bg-[#5C3D2E] text-white p-8 rounded-[2rem] flex flex-col gap-3 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-12 bg-white/5 rounded-full blur-3xl"></div>
+                  <div className="flex items-center justify-between relative z-10">
                     <div>
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{t.booking.total}</p>
-                      <p className="text-sm text-slate-500 font-medium">{nights} {t.booking.night} / {adults + children} fő</p>
+                      <p className="text-[#D0C0B5] text-xs font-extrabold uppercase tracking-widest mb-1">{t.booking.total}</p>
+                      <p className="text-sm text-white/80 font-semibold bg-white/10 px-3 py-1 rounded-full inline-block">{nights} {t.booking.night} / {adults + children} fő</p>
                     </div>
-                    <div className="text-2xl md:text-3xl font-extrabold text-yellow-400 tracking-tight">
-                      {totalPrice.toLocaleString('hu-HU')} <span className="text-lg text-yellow-600/80">Ft</span>
+                    <div className="text-3xl md:text-4xl font-extrabold text-[#FCE8B2] tracking-tight drop-shadow-md">
+                      {totalPrice.toLocaleString('hu-HU')} <span className="text-xl text-[#FCE8B2]/70">Ft</span>
                     </div>
                   </div>
                   {nights === 1 && (
-                    <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-amber-400 bg-amber-400/10 p-2 rounded-lg border border-amber-400/20 mt-1">
-                      <Calculator size={14} />
+                    <div className="flex items-center gap-3 text-xs font-bold text-[#964B33] bg-[#FFDFD3] p-3 rounded-xl mt-3 relative z-10">
+                      <Calculator size={16} />
                       <span>AZ ÁR TARTALMAZZA A 20% EGYSZAKÁS FELÁRAT</span>
                     </div>
                   )}
                 </div>
 
-                <Button type="submit" className="w-full text-lg h-14 font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all" disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin mr-2" /> : t.booking.send}
+                <Button type="submit" className="w-full text-xl h-16 font-extrabold bg-[#E87A5D] hover:bg-[#D96C4A] hover:scale-[1.02] text-white rounded-[1.5rem] shadow-[0_10px_25px_rgba(232,122,93,0.4)] transition-all" disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : t.booking.send}
                 </Button>
               </form>
             </CardContent>
